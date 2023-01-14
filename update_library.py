@@ -8,7 +8,7 @@ import json
 con = sqlite3.connect("musiclibrary.db")
 cur = con.cursor()
 try:
-    cur.execute("create table library(filename text, tracktitle text, artist text, album text, albumartist text, tracknumber text)")
+    cur.execute("create table library(id INTEGER PRIMARY KEY, filename text, tracktitle text, artist text, album text, albumartist text, tracknumber text)")
 except:
     pass
 
@@ -30,7 +30,7 @@ for file in files:
         print("Error, could not add this file")
 
 cur.execute("delete from library")
-cur.executemany("insert into library values(?,?,?,?,?,?)", data)
+cur.executemany("insert into library(filename, tracktitle, artist, album, albumartist, tracknumber) values(?,?,?,?,?,?)", data)
 con.commit()
 
 for row in cur.execute("select * from library"):
