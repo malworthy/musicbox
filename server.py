@@ -1,9 +1,14 @@
-from bottle import route, post, run, template, request
+#pip install bottle
+#pip install bottle-cors-plugin
+from bottle import route, post, run, template, request, app
+from bottle_cors_plugin import cors_plugin
 import sqlite3
 import json
 import subprocess
 #import asyncio
 import threading
+import time
+from pygame import mixer
 
 con = sqlite3.connect("musiclibrary.db")
 con.row_factory = sqlite3.Row
@@ -62,6 +67,15 @@ def play():
     thread.start()
     return "playing"
 
+@post('/playalbum')
+def playalbum():
+    params = request.json
+    cur.execute("insert into queue(libraryid) select id from library where album = ? and artist = ?", (params["album"], params["artist"]))
+    con.commit()
+
+    print(request.json)
+    return play()
+
 def playasync():
     con2 = sqlite3.connect("musiclibrary.db")
     con2.row_factory = sqlite3.Row
@@ -77,11 +91,18 @@ def playasync():
             cur2.execute("update queue set playing = datetime('now') where id = ?",(row['id'],))
             con2.commit()
             print(f"playing song {row['filename']}")
-            result = subprocess.run(player + [row['filename']], capture_output=True)
+            #result = subprocess.run(player + [row['filename']], capture_output=True)
+            mixer.init()
+            mixer.music.load(row['filename'])
+            mixer.music.play()
+            while mixer.music.get_busy():  # wait for music to finish playing
+                time.sleep(1)
+
             print(f"finished playing song {row['filename']}")
             cur2.execute("delete from queue where id = ?",(row['id'],))
             con2.commit()
             print(f"delete song from playlist")
 
-
+app = app()
+app.install(cors_plugin('*'))
 run(host='localhost', port=8080)
