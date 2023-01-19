@@ -1,99 +1,29 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>Hello World!</title>
-    </head>
-    <body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>MusicBox</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Press+Start+2P"
+      rel="stylesheet"
+    />
+    <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css" />
+  </head>
+  <body>
+    <script src="/js"></script>
 
-    
-    <script>
-        const baseUrl = "http://localhost:8080"
-        function addRow(columns) {
-            // Get a reference to the table
-            let tableRef = document.getElementById("albumsbody");
-        
-            // Insert a row at the end of the table
-            let newRow = tableRef.insertRow(-1);
-
-            for(const col of columns)
-            {
-                let newCell = newRow.insertCell(-1);
-                let newText = document.createTextNode(col);
-                newCell.appendChild(newText);
-            }  
-            let newCell = newRow.insertCell(-1);
-            let button = document.createElement('button');
-            button.textContent = "Play";
-            button.onclick = () => playAlbum(columns[2], columns[1]);
-            newCell.appendChild(button);      
-        }
-
-        function playAlbum(album, artist)
-        {
-            const httpRequest = new XMLHttpRequest();
-            httpRequest.onreadystatechange = () => {
-                if (httpRequest.readyState === XMLHttpRequest.DONE) {
-                    
-                }
-                
-            };
-            httpRequest.open('POST', `${baseUrl}/playalbum`, true);
-            //httpRequest.setRequestHeader('Content-Type', 'text/json');
-            httpRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            httpRequest.send(JSON.stringify({album: album, artist: artist }));
-        }
-
-        function getAlbums()
-        {
-            const search = document.getElementById("search").value;
-            const httpRequest = new XMLHttpRequest();
-            httpRequest.onreadystatechange = () => {
-                if (httpRequest.readyState === XMLHttpRequest.DONE) {
-                    const text = decodeHtml(httpRequest.responseText);
-                    //alert(text);
-                    const albums = JSON.parse(text);
-                    let i = 1;
-                    document.getElementById("albumsbody").innerHTML = "";
-                    for(const album of albums) {
-                        addRow([i++, album.artist, album.album]);
-                        console.log([album.artist, album.album]);
-                    }
-                }
-                
-            };
-            httpRequest.open('GET', `${baseUrl}/search?search=${search}`, true);
-            //httpRequest.setRequestHeader('Content-Type', 'text/json');
-            httpRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            httpRequest.send();
-        }
-
-        function decodeHtml(html) {
-            
-            let areaElement = document.createElement("textarea");
-            areaElement.innerHTML = html;
-            const decoded = areaElement.value;
-            areaElement.remove();
-
-            return decoded;
-        }
-
-    </script>
-
-    <h1>Consbox Music Server</h1>
-    <label>Enter artist name or album</label>
-    <input type="text" id = "search">
-    <button onclick="getAlbums()">Search</button>
-    <table id = "albums">
-        <thead>
-            <tr>
-            <td>#</td>
-            <td>Artist</td>
-            <td>Album</td>
-        </tr>
-        </thead>
-        <tbody id="albumsbody">
-        </tbody>
+    <h1>MusicBox Server</h1>
+    <div id="status" class="blink">Not Playing</div>
+    <div class="padded">
+      <label>Enter artist name or album</label>
+      <input type="text" id="search" />
+      <button onclick="getAlbums()">Search</button>
+      <button onclick="getQueue()">Queue</button>
+    </div>
+    <table id="albums">
+      <thead id="tablehead"></thead>
+      <tbody id="albumsbody"></tbody>
     </table>
-</body>
+  </body>
 </html>

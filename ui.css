@@ -1,0 +1,30 @@
+body {
+  background-color: black;
+  color: green;
+}
+
+.blink {
+  animation: blinker 1s step-start infinite;
+}
+.bright {
+  color: lightgreen;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.padded {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+th,
+td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}

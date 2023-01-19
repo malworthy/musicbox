@@ -2,3 +2,5 @@ config.json
 musiclibrary.db
 ffplay.exe
 musiclibrary.v1.db
+sqlite3.exe
+music.db

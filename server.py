@@ -1,6 +1,7 @@
 #pip install bottle
 #pip install bottle-cors-plugin
-from bottle import route, post, run, template, request, app
+#pip install pygame
+from bottle import route, post, run, template, request, app, static_file
 from bottle_cors_plugin import cors_plugin
 import sqlite3
 import json
@@ -15,7 +16,7 @@ con.row_factory = sqlite3.Row
 cur = con.cursor()
 try:
     cur.execute("drop table queue")
-    cur.execute("create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text)")
+    cur.execute("create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text, canplay int)")
 except:
     pass
 
@@ -27,6 +28,18 @@ def query(sql, params):
     res =cur.execute(sql, params)
     rows = res.fetchall()
     return [dict(row) for row in rows]
+
+@route('/ui')
+def ui():
+    return static_file("ui.html","./")
+
+@route('/js')
+def ui():
+    return static_file("ui.js","./")
+
+@route('/css')
+def ui():
+    return static_file("ui.css","./")
 
 @route('/search')
 def search():
@@ -58,19 +71,36 @@ def add(id):
 
 @route("/queue")
 def queue():
-    result = query("select * from queue",())
+    result = query("select l.* from queue q inner join library l on q.libraryid = l.id",())
     return template('{{rows}}', rows=json.dumps(result))
+
+@route("/playing")
+def playing():
+    result = query("select l.*, 1 as playing from queue q inner join library l on q.libraryid = l.id where playing is not null",())
+    if len(result) == 1:
+        return template('{{rows}}', rows=json.dumps(result[0]))
+    return """{"playing" : 0}"""
 
 @post('/play')
 def play():
+    cur.execute("update queue set canplay = 1")
+    con.commit()
     thread = threading.Thread(target=playasync)
     thread.start()
     return "playing"
 
+@post('/stop')
+def stop():
+    cur.execute("update queue set canplay = 0")
+    con.commit()
+    mixer.music.stop()
+    return "stopped"
+
 @post('/playalbum')
 def playalbum():
     params = request.json
-    cur.execute("insert into queue(libraryid) select id from library where album = ? and artist = ?", (params["album"], params["artist"]))
+    cur.execute("delete from queue")
+    cur.execute("insert into queue(libraryid) select id from library where album = ? and artist = ? order by cast(tracknumber as INT), filename", (params["album"], params["artist"]))
     con.commit()
 
     print(request.json)
@@ -82,7 +112,7 @@ def playasync():
     cur2 = con2.cursor()
     while True:
         player = [config["player"]] + config["playerparams"] 
-        result = cur2.execute("select q.id, l.filename from queue q inner join library l on q.libraryid = l.id order by q.id limit 1")
+        result = cur2.execute("select q.id, l.filename from queue q inner join library l on q.libraryid = l.id where canplay = 1 order by q.id limit 1")
         rows = result.fetchall()
         if len(rows) == 0:
             return
@@ -92,7 +122,7 @@ def playasync():
             con2.commit()
             print(f"playing song {row['filename']}")
             #result = subprocess.run(player + [row['filename']], capture_output=True)
-            mixer.init()
+            #mixer.init()
             mixer.music.load(row['filename'])
             mixer.music.play()
             while mixer.music.get_busy():  # wait for music to finish playing
@@ -105,4 +135,5 @@ def playasync():
 
 app = app()
 app.install(cors_plugin('*'))
+mixer.init()
 run(host='localhost', port=8080)
