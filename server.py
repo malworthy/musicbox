@@ -45,8 +45,14 @@ def ui():
 def search():
     x = request.query.search
     x = '%' + x + '%'
-    sql = "select distinct artist, album from library where album like ? or artist like ? order by artist, album"
-    res =cur.execute(sql, (x,x))
+    #sql = "select distinct albumartist as artist, album from library where album like ? or artist like ? or albumartist like ? order by artist, album"
+    sql = """
+        select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist 
+        from (select distinct albumartist, album from library where album like ? or artist like ? or albumartist like ?) sq 
+        group by album
+        order by artist;
+    """
+    res =cur.execute(sql, (x,x,x))
     rows = res.fetchall()
     result = [dict(row) for row in rows]
     #return rows
@@ -83,11 +89,14 @@ def playing():
 
 @post('/play')
 def play():
+    if mixer.music.get_busy() or is_playing():
+        return "already playing"
+
     cur.execute("update queue set canplay = 1")
     con.commit()
     thread = threading.Thread(target=playasync)
     thread.start()
-    return "playing"
+    return "start playing"
 
 @post('/stop')
 def stop():
@@ -96,22 +105,35 @@ def stop():
     mixer.music.stop()
     return "stopped"
 
+@post('/queuealbum')
+def queuealbum():
+    params = request.json
+    cur.execute("insert into queue(libraryid) select id from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
+    con.commit()
+
+    return "queued"
+
 @post('/playalbum')
 def playalbum():
+    if mixer.music.get_busy() or is_playing():
+        return "already playing"
+
     params = request.json
     cur.execute("delete from queue")
-    cur.execute("insert into queue(libraryid) select id from library where album = ? and artist = ? order by cast(tracknumber as INT), filename", (params["album"], params["artist"]))
+    cur.execute("insert into queue(libraryid) select id from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
     con.commit()
 
     print(request.json)
     return play()
+
+def is_playing():
+    return False # for now just rely on is busy - but won't work in the 1 seconds between songs
 
 def playasync():
     con2 = sqlite3.connect("musiclibrary.db")
     con2.row_factory = sqlite3.Row
     cur2 = con2.cursor()
     while True:
-        player = [config["player"]] + config["playerparams"] 
         result = cur2.execute("select q.id, l.filename from queue q inner join library l on q.libraryid = l.id where canplay = 1 order by q.id limit 1")
         rows = result.fetchall()
         if len(rows) == 0:
@@ -121,8 +143,6 @@ def playasync():
             cur2.execute("update queue set playing = datetime('now') where id = ?",(row['id'],))
             con2.commit()
             print(f"playing song {row['filename']}")
-            #result = subprocess.run(player + [row['filename']], capture_output=True)
-            #mixer.init()
             mixer.music.load(row['filename'])
             mixer.music.play()
             while mixer.music.get_busy():  # wait for music to finish playing
@@ -133,6 +153,7 @@ def playasync():
             con2.commit()
             print(f"delete song from playlist")
 
+##### ENTRY POINT #####
 app = app()
 app.install(cors_plugin('*'))
 mixer.init()

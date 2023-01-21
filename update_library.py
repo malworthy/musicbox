@@ -32,6 +32,7 @@ for file in files:
 print("Inserting records into database")
 cur.execute("delete from library")
 cur.executemany("insert into library(filename, tracktitle, artist, album, albumartist, tracknumber, length) values(?,?,?,?,?,?,?)", data)
+cur.execute("update library set albumartist = artist where albumartist = ''")
 con.commit()
 
 print("finished")

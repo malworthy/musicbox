@@ -1,18 +1,21 @@
-/*
-const socket = new WebSocket('ws://localhost:8081');
-
-// Connection opened
-socket.addEventListener('open', (event) => {
-    socket.send('Hello Server!');
-});
-
-// Listen for messages
-socket.addEventListener('message', (event) => {
-    console.log('Message from server ', event.data);
-});*/
-
 const baseUrl = "http://localhost:8080";
 //const baseUrl = "http://192.168.1.72:8080"
+
+function ajaxCall(verb, endpoint, callback)
+{
+  const httpRequest = new XMLHttpRequest();
+  httpRequest.onreadystatechange = () => {
+    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+      callback();
+    }
+  };
+  httpRequest.open(verb, `${baseUrl}/${endpoint}`, true);
+  httpRequest.setRequestHeader(
+    "Content-Type",
+    "application/json;charset=UTF-8"
+  );
+  httpRequest.send();
+}
 
 function updateStatus() {
   const statusDiv = document.getElementById("status");
@@ -56,8 +59,6 @@ function addRow(columns) {
   for (const col of columns) {
     let newCell = newRow.insertCell(-1);
     newCell.innerHTML = col;
-    //let newText = document.createTextNode(col);
-    //newCell.appendChild(newText);
   }
   return newRow;
 }
@@ -67,18 +68,81 @@ function playAlbum(album, artist) {
   httpRequest.onreadystatechange = () => {
     if (httpRequest.readyState === XMLHttpRequest.DONE) {
       updateStatus();
-      getQueue();
-      //updateStatus()
-      //setInterval(updateStatus, 10000);
     }
   };
   httpRequest.open("POST", `${baseUrl}/playalbum`, true);
-  //httpRequest.setRequestHeader('Content-Type', 'text/json');
   httpRequest.setRequestHeader(
     "Content-Type",
     "application/json;charset=UTF-8"
   );
   httpRequest.send(JSON.stringify({ album: album, artist: artist }));
+}
+
+function queueAlbum(album, artist) {
+  const httpRequest = new XMLHttpRequest();
+  httpRequest.onreadystatechange = () => {
+    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+      updateStatus();
+    }
+  };
+  httpRequest.open("POST", `${baseUrl}/queuealbum`, true);
+  httpRequest.setRequestHeader(
+    "Content-Type",
+    "application/json;charset=UTF-8"
+  );
+  httpRequest.send(JSON.stringify({ album: album, artist: artist }));
+}
+
+function queueSong(id) {
+  alert(id);
+}
+
+function getAlbum(name) {
+  const httpRequest = new XMLHttpRequest();
+  httpRequest.onreadystatechange = () => {
+    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+      const text = decodeHtml(httpRequest.responseText);
+      const songs = JSON.parse(text);
+      let i = 1;
+      document.getElementById("tablehead").innerHTML = `<tr class="bright">
+        <td>#</td>
+        <td>Song</td>
+        <td>Artist</td>
+        <td>Album</td>
+        <td>Length</td>
+        </tr>`;
+      document.getElementById("albumsbody").innerHTML = "";
+      for (const song of songs) {
+        const newRow = addRow([
+          i++,
+          song.tracktitle,
+          song.artist,
+          song.album,
+          fmtMSS(song.length),
+        ]);
+
+        const newCell = newRow.insertCell(-1);
+        const button = document.createElement("button");
+        button.textContent = "Play";
+        button.onclick = () => queueSong(album.id);
+        newCell.appendChild(button);
+      }
+    }
+  };
+  httpRequest.open("GET", `${baseUrl}/album?search=${encodeURIComponent(name)}`, true);
+  httpRequest.setRequestHeader(
+    "Content-Type",
+    "application/json;charset=UTF-8"
+  );
+  httpRequest.send();
+}
+
+function addButton(row, text, clickEvent) {
+  let newCell = row.insertCell(-1);
+  let button = document.createElement("button");
+  button.textContent = text;
+  button.onclick = clickEvent;
+  newCell.appendChild(button);
 }
 
 function getAlbums() {
@@ -99,14 +163,10 @@ function getAlbums() {
         const newRow = addRow([
           i++,
           `<a href="#">${album.artist}`,
-          `<a href="#">${album.album}`,
+          `<a href="#" onclick="getAlbum('${album.album}')"> ${album.album}`,
         ]);
-
-        const newCell = newRow.insertCell(-1);
-        const button = document.createElement("button");
-        button.textContent = "Play";
-        button.onclick = () => playAlbum(album.album, album.artist);
-        newCell.appendChild(button);
+        addButton(newRow, "Play", () => playAlbum(album.album, album.artist));
+        addButton(newRow, "Add", () => queueAlbum(album.album, album.artist));
       }
     }
   };
