@@ -11,54 +11,50 @@ function ready(fn) {
   }
 }
 
-//TODO: replace with fetch
-function ajaxCall(verb, endpoint, callback, data = null) {
-  const httpRequest = new XMLHttpRequest();
-  httpRequest.onreadystatechange = () => {
-    if (httpRequest.readyState === XMLHttpRequest.DONE) {
-      callback(httpRequest);
-    }
+const doAjax = async (verb, endpoint, data = null) => {
+  const options = {
+    method: verb,
+    headers: {
+      "Content-type": "application/json; charset=UTF-8",
+    },
   };
-  httpRequest.open(verb, `${baseUrl}/${endpoint}`, true);
-  httpRequest.setRequestHeader(
-    "Content-Type",
-    "application/json;charset=UTF-8"
-  );
-  if (!data) httpRequest.send();
-  else httpRequest.send(JSON.stringify(data));
-}
+  if (data != null) options.body = JSON.stringify(data);
+  const response = await fetch(`${baseUrl}/${endpoint}`, options); 
+  if (response.ok) {
+    return await response.json(); 
+  } else {
+    return null;
+  }
+};
 
-function updateStatus() {
+async function updateStatus() {
   const statusDiv = document.getElementById("status");
   const playBtn = document.getElementById("play");
 
-  ajaxCall("GET", "playing", (httpRequest) => {
-    const text = decodeHtml(httpRequest.responseText);
-    const songDetails = JSON.parse(text);
-    if (songDetails.playing === 1) {
-      statusDiv.innerHTML = `<p>Now playing: ${songDetails.tracktitle} by ${songDetails.artist}</p>`;
-      playBtn.innerHTML = "Stop";
-      playBtn.onclick = () => stopPlay();
-    } else {
-      statusDiv.innerHTML = "<p>Not Playing</p>";
-      playBtn.innerHTML = "Play";
-      playBtn.onclick = () => play();
-    }
-  });
-}
-
-function stopPlay() {
-  ajaxCall("POST", "stop", () => {
-    const statusDiv = document.getElementById("status");
-    const playBtn = document.getElementById("play");
+  const songDetails = await doAjax("GET", "playing");
+  if (songDetails.playing === 1) {
+    statusDiv.innerHTML = `<p>Now playing: ${songDetails.tracktitle} by ${songDetails.artist}</p>`;
+    playBtn.innerHTML = "Stop";
+    playBtn.onclick = () => stopPlay();
+  } else {
     statusDiv.innerHTML = "<p>Not Playing</p>";
     playBtn.innerHTML = "Play";
     playBtn.onclick = () => play();
-  });
+  }
 }
 
-function play() {
-  ajaxCall("POST", "play", () => updateStatus());
+async function stopPlay() {
+  await doAjax("POST", "stop");
+  const statusDiv = document.getElementById("status");
+  const playBtn = document.getElementById("play");
+  statusDiv.innerHTML = "<p>Not Playing</p>";
+  playBtn.innerHTML = "Play";
+  playBtn.onclick = () => play();
+}
+
+async function play() {
+  await doAjax("POST", "play");
+  updateStatus();
 }
 
 function addRow(columns) {
@@ -72,46 +68,43 @@ function addRow(columns) {
   return newRow;
 }
 
-function playAlbum(album, artist) {
-  ajaxCall("POST", "playalbum", updateStatus, { album: album, artist: artist });
+async function playAlbum(album, artist) {
+  await doAjax("POST", "playalbum", { album: album, artist: artist });
+  updateStatus();
 }
 
-function queueAlbum(album, artist) {
-  ajaxCall("POST", "queuealbum", updateStatus, {
-    album: album,
-    artist: artist,
-  });
+async function queueAlbum(album, artist) {
+  await doAjax("POST", "queuealbum", { album: album, artist: artist });
+  updateStatus();
 }
 
 function queueSong(id) {
   alert(id);
 }
 
-function getAlbum(name) {
-  ajaxCall("GET", `album?search=${encodeURIComponent(name)}`, (httpRequest) => {
-    const text = decodeHtml(httpRequest.responseText);
-    const songs = JSON.parse(text);
-    let i = 1;
-    document.getElementById("tablehead").innerHTML = `<tr class="bright">
+async function getAlbum(name) {
+  var songs = await doAjax("GET", `album?search=${encodeURIComponent(name)}`);
+  if (songs === null) return;
+  let i = 1;
+  document.getElementById("tablehead").innerHTML = `<tr class="bright">
       <td>#</td>
       <td>Song</td>
       <td>Artist</td>
       <td>Album</td>
       <td>Length</td>
       </tr>`;
-    document.getElementById("albumsbody").innerHTML = "";
-    for (const song of songs) {
-      const newRow = addRow([
-        i++,
-        song.tracktitle,
-        song.artist,
-        song.album,
-        fmtMSS(song.length),
-      ]);
-      addButton(newRow, "Play", () => queueSong(album.id));
-      addButton(newRow, "Add", () => queueSong(album.id));
-    }
-  });
+  document.getElementById("albumsbody").innerHTML = "";
+  for (const song of songs) {
+    const newRow = addRow([
+      i++,
+      song.tracktitle,
+      song.artist,
+      song.album,
+      fmtMSS(song.length),
+    ]);
+    addButton(newRow, "Play", () => queueSong(song.id));
+    addButton(newRow, "Add", () => queueSong(song.id));
+  }
 }
 
 function addButton(row, text, clickEvent) {
@@ -122,28 +115,25 @@ function addButton(row, text, clickEvent) {
   newCell.appendChild(button);
 }
 
-function getAlbums() {
+async function getAlbums() {
   const search = document.getElementById("search").value;
-  ajaxCall("GET", `search?search=${search}`, (httpRequest) => {
-    const text = decodeHtml(httpRequest.responseText);
-    const albums = JSON.parse(text);
-    let i = 1;
-    document.getElementById("tablehead").innerHTML = `<tr class="bright">
+  const albums = await doAjax("GET", `search?search=${search}`);
+  let i = 1;
+  document.getElementById("tablehead").innerHTML = `<tr class="bright">
               <td>#</td>
               <td>Artist</td>
               <td>Album</td>
               </tr>`;
-    document.getElementById("albumsbody").innerHTML = "";
-    for (const album of albums) {
-      const newRow = addRow([
-        i++,
-        `<a href="#">${album.artist}`,
-        `<a href="#" onclick="getAlbum('${album.album}')"> ${album.album}`,
-      ]);
-      addButton(newRow, "Play", () => playAlbum(album.album, album.artist));
-      addButton(newRow, "Add", () => queueAlbum(album.album, album.artist));
-    }
-  });
+  document.getElementById("albumsbody").innerHTML = "";
+  for (const album of albums) {
+    const newRow = addRow([
+      i++,
+      `<a href="#">${album.artist}`,
+      `<a href="#" onclick="getAlbum('${album.album}')"> ${album.album}`,
+    ]);
+    addButton(newRow, "Play", () => playAlbum(album.album, album.artist));
+    addButton(newRow, "Add", () => queueAlbum(album.album, album.artist));
+  }
 }
 
 function fmtMSS(s) {
@@ -154,7 +144,7 @@ function removeFromQueue(id) {
   console.log("remove from queue called");
 }
 
-function getQueue() {
+async function getQueue() {
   document.getElementById("tablehead").innerHTML = `<tr class="bright">
     <td>#</td>
     <td>Song</td>
@@ -162,29 +152,17 @@ function getQueue() {
     <td>Album</td>
     <td>Length</td>
     </tr>`;
-  ajaxCall("GET", `queue`, (httpRequest) => {
-    const text = decodeHtml(httpRequest.responseText);
-    const queue = JSON.parse(text);
-    let i = 1;
-    document.getElementById("albumsbody").innerHTML = "";
-    for (const song of queue) {
-      const newRow = addRow([
-        i++,
-        song.tracktitle,
-        song.artist,
-        song.album,
-        fmtMSS(song.length),
-      ]);
-      addButton(newRow, "Del", () => removeFromQueue(song.id));
-    }
-  });
-}
-
-function decodeHtml(html) {
-  let areaElement = document.createElement("textarea");
-  areaElement.innerHTML = html;
-  const decoded = areaElement.value;
-  areaElement.remove();
-
-  return decoded;
+  const queue = await doAjax("GET", "queue");
+  let i = 1;
+  document.getElementById("albumsbody").innerHTML = "";
+  for (const song of queue) {
+    const newRow = addRow([
+      i++,
+      song.tracktitle,
+      song.artist,
+      song.album,
+      fmtMSS(song.length),
+    ]);
+    addButton(newRow, "Del", () => removeFromQueue(song.id));
+  }
 }

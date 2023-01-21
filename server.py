@@ -1,12 +1,10 @@
 #pip install bottle
 #pip install bottle-cors-plugin
 #pip install pygame
-from bottle import route, post, run, template, request, app, static_file
+from bottle import route, post, run, request, app, static_file
 from bottle_cors_plugin import cors_plugin
 import sqlite3
 import json
-import subprocess
-#import asyncio
 import threading
 import time
 from pygame import mixer
@@ -56,7 +54,7 @@ def search():
     rows = res.fetchall()
     result = [dict(row) for row in rows]
     #return rows
-    return template('{{rows}}', rows=json.dumps(result))
+    return json.dumps(result)
 
 @route('/album')
 def album():
@@ -64,8 +62,8 @@ def album():
   
     sql =  sql = "select * from library where album = ? order by artist, album, cast(tracknumber as INT), filename"
     result = query(sql, (search,))
-    
-    return template('{{rows}}', rows=json.dumps(result))
+
+    return json.dumps(result)
 
 @post('/add/<id>')
 def add(id):
@@ -73,37 +71,37 @@ def add(id):
     result = cur.execute(sql, (id, ))
     con.commit()
     result = query("select * from queue",())
-    return template('{{rows}}', rows=json.dumps(result))
+    return json.dumps(result)
 
 @route("/queue")
 def queue():
     result = query("select l.* from queue q inner join library l on q.libraryid = l.id",())
-    return template('{{rows}}', rows=json.dumps(result))
+    return json.dumps(result)
 
 @route("/playing")
 def playing():
     result = query("select l.*, 1 as playing from queue q inner join library l on q.libraryid = l.id where playing is not null",())
     if len(result) == 1:
-        return template('{{rows}}', rows=json.dumps(result[0]))
+        return json.dumps(result[0])
     return """{"playing" : 0}"""
 
 @post('/play')
 def play():
     if mixer.music.get_busy() or is_playing():
-        return "already playing"
+        return """{"status" : "already playing"}"""
 
     cur.execute("update queue set canplay = 1")
     con.commit()
     thread = threading.Thread(target=playasync)
     thread.start()
-    return "start playing"
+    return """{"status" : "play started"}"""
 
 @post('/stop')
 def stop():
     cur.execute("update queue set canplay = 0")
     con.commit()
     mixer.music.stop()
-    return "stopped"
+    return """{"status" : "stopped"}"""
 
 @post('/queuealbum')
 def queuealbum():
@@ -111,12 +109,12 @@ def queuealbum():
     cur.execute("insert into queue(libraryid) select id from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
     con.commit()
 
-    return "queued"
+    return """{"status" : "queued"}""" 
 
 @post('/playalbum')
 def playalbum():
     if mixer.music.get_busy() or is_playing():
-        return "already playing"
+        return """{"status" : "already playing"}"""
 
     params = request.json
     cur.execute("delete from queue")
