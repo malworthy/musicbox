@@ -1,6 +1,6 @@
 # musicbox
 
-A lightweight music server for playing local files, with a retro user interface.  Like mopidy but without the streaming.
+A lightweight music server for playing local files, with a retro user interface.  Like mopidy but without the streaming. Perfect for running on a raspberry pi.
 
 Written in python and vanilla.js.
 
@@ -9,21 +9,34 @@ Written in python and vanilla.js.
 ## installing/running
 
 Install the following python dependencies:
+```
+pip install bottle
+pip install bottle-cors-plugin
+pip install pygame
+pip install music-tag
+```
 
-- pip install bottle
-- pip install bottle-cors-plugin
-- pip install pygame
+You may also need install some additional libraries (command for debian based systems):
+```
+sudo apt-get install libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 libsdl2-2.0-0
+```
 
 Clone the repository:
 ```
 git clone https://github.com/malworthy/musicbox.git
 ```
-Create a config.json file:
+Create a config.json file:  
 ```
 {
-    "library" : "[Enter the path to your music collection here]",
+    "library" : "/path/to/library/",
+    "host" : "localhost",
+    "port" : 8080
 }
 ```
+- Change "library" to point to your music library.
+- Change "host" to "0.0.0.0" to allow remote connections to the server.
+- Change "port" if need the server to run on a different port.
+
 
 Update database with library:
 ```
@@ -38,5 +51,5 @@ python server.py
 Browse to UI:
 http://localhost:8080/ui
 
-NOTE: replace 'localhost' with ip address of server you are running off.   
+NOTE: replace 'localhost' with the address of server you are running off.   
 
