@@ -31,7 +31,7 @@ async function updateStatus() {
   const statusDiv = document.getElementById("status");
   const playBtn = document.getElementById("play");
 
-  const songDetails = await doAjax("GET", "playing");
+  const songDetails = await doAjax("GET", "status");
   if (songDetails.playing === 1) {
     statusDiv.innerHTML = `<p>Now playing: ${songDetails.tracktitle} by ${songDetails.artist}</p>`;
     playBtn.innerHTML = "Stop";
@@ -41,6 +41,7 @@ async function updateStatus() {
     playBtn.innerHTML = "Play";
     playBtn.onclick = () => play();
   }
+  updateQueueStatus(songDetails.queueCount);
 }
 
 async function stopPlay() {
@@ -78,11 +79,17 @@ async function queueAlbum(album, artist) {
   updateStatus();
 }
 
-function queueSong(id) {
-  alert(id);
+function updateQueueStatus(count) {
+  document.getElementById("queue").innerHTML = `Queue (${count})`;
+}
+
+async function queueSong(id) {
+  const result = await doAjax("POST", `add/${id}`);
+  updateQueueStatus(result.queueCount);
 }
 
 async function getAlbum(name) {
+  name = decodeURIComponent(name);
   var songs = await doAjax("GET", `album?search=${encodeURIComponent(name)}`);
   if (songs === null) return;
   let i = 1;
@@ -102,7 +109,7 @@ async function getAlbum(name) {
       song.album,
       fmtMSS(song.length),
     ]);
-    addButton(newRow, "Play", () => queueSong(song.id));
+    addButton(newRow, "Play", () => playOneSong(song.id));
     addButton(newRow, "Add", () => queueSong(song.id));
   }
 }
@@ -128,8 +135,8 @@ async function getAlbums() {
   for (const album of albums) {
     const newRow = addRow([
       i++,
-      `<a href="#">${album.artist}`,
-      `<a href="#" onclick="getAlbum('${album.album}')"> ${album.album}`,
+      `${album.artist}`,
+      `<a href="#" onclick="getAlbum('${encodeURIComponent(album.album).replace(/'/g, "%27")}')"> ${album.album}</a>`,
     ]);
     addButton(newRow, "Play", () => playAlbum(album.album, album.artist));
     addButton(newRow, "Add", () => queueAlbum(album.album, album.artist));
@@ -140,8 +147,15 @@ function fmtMSS(s) {
   return (s - (s %= 60)) / 60 + (9 < s ? ":" : ":0") + s;
 }
 
-function removeFromQueue(id) {
-  console.log("remove from queue called");
+async function removeFromQueue(id, row) {
+  const result = await doAjax("DELETE",`${id}`);
+  updateQueueStatus(result.queueCount);
+  row.innerHTML = "";
+}
+
+async function playOneSong(id) {
+  await doAjax("POST", `play/${id}`);
+  updateStatus();
 }
 
 async function getQueue() {
@@ -163,6 +177,7 @@ async function getQueue() {
       song.album,
       fmtMSS(song.length),
     ]);
-    addButton(newRow, "Del", () => removeFromQueue(song.id));
+    addButton(newRow, "Del", () => removeFromQueue(song.queueId, newRow));
   }
+  updateQueueStatus(i-1);
 }

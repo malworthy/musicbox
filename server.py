@@ -1,7 +1,7 @@
 #pip install bottle
 #pip install bottle-cors-plugin
 #pip install pygame
-from bottle import route, post, run, request, app, static_file
+from bottle import route, post, run, request, app, static_file, delete
 from bottle_cors_plugin import cors_plugin
 import sqlite3
 import json
@@ -70,20 +70,43 @@ def add(id):
     sql = "insert into queue(libraryid) values(?)"
     result = cur.execute(sql, (id, ))
     con.commit()
-    result = query("select * from queue",())
-    return json.dumps(result)
+    result = query("select count(*) as queueCount from queue",())
+    return json.dumps(result[0])
+
+@delete('/<id>')
+def remove(id):
+    sql = "delete from queue where id = ?"
+    cur.execute(sql, (id, ))
+    con.commit()
+    result = query("select count(*) as queueCount from queue",())
+    return json.dumps(result[0])
+
+@delete('/all')
+def remove():
+    sql = "delete from queue"
+    cur.execute(sql)
+    con.commit()
+    return """{ "queueCount" : 0 }"""
+
 
 @route("/queue")
 def queue():
-    result = query("select l.* from queue q inner join library l on q.libraryid = l.id",())
+    result = query("select q.id as queueId, l.* from queue q inner join library l on q.libraryid = l.id",())
     return json.dumps(result)
 
-@route("/playing")
-def playing():
-    result = query("select l.*, 1 as playing from queue q inner join library l on q.libraryid = l.id where playing is not null",())
+@route("/status")
+def status():
+    sql = """
+        select l.*, 1 as playing, (select count(*) from queue) as queueCount 
+        from queue q inner join library l on q.libraryid = l.id 
+        where playing is not null
+    """
+    result = query(sql,())
     if len(result) == 1:
         return json.dumps(result[0])
-    return """{"playing" : 0}"""
+
+    result = query("select count(*) as queueCount , 0 as playing from queue",())
+    return json.dumps(result[0])
 
 @post('/play')
 def play():
@@ -110,6 +133,14 @@ def queuealbum():
     con.commit()
 
     return """{"status" : "queued"}""" 
+
+@post('/play/<id>')
+def playsong(id):
+    if mixer.music.get_busy() or is_playing():
+        return """{"status" : "already playing"}"""
+    cur.execute("delete from queue")
+    add(id)
+    return play()
 
 @post('/playalbum')
 def playalbum():
