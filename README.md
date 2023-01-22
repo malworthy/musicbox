@@ -14,6 +14,10 @@ Install the following python dependencies:
 - pip install bottle-cors-plugin
 - pip install pygame
 
+Clone the repository:
+```
+git clone https://github.com/malworthy/musicbox.git
+```
 Create a config.json file:
 ```
 {
