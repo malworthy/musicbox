@@ -9,6 +9,7 @@ con = sqlite3.connect("musiclibrary.db")
 cur = con.cursor()
 try:
     cur.execute("create table library(id INTEGER PRIMARY KEY, filename text, tracktitle text, artist text, album text, albumartist text, tracknumber int, length int)")
+    cur.execute("create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text, canplay int)")
 except:
     pass
 

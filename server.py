@@ -9,19 +9,6 @@ import threading
 import time
 from pygame import mixer
 
-con = sqlite3.connect("musiclibrary.db")
-con.row_factory = sqlite3.Row
-cur = con.cursor()
-try:
-    cur.execute("drop table queue")
-    cur.execute("create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text, canplay int)")
-except:
-    pass
-
-f = open("config.json")
-config = json.load(f)
-f.close()
-
 def query(sql, params):
     res =cur.execute(sql, params)
     rows = res.fetchall()
@@ -183,7 +170,15 @@ def playasync():
             print(f"delete song from playlist")
 
 ##### ENTRY POINT #####
+con = sqlite3.connect("musiclibrary.db")
+con.row_factory = sqlite3.Row
+cur = con.cursor()
+
+f = open("config.json")
+config = json.load(f)
+f.close()
+
 app = app()
 app.install(cors_plugin('*'))
 mixer.init()
-run(host='localhost', port=8080)
+run(host=config["host"], port=config["port"])
