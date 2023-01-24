@@ -8,6 +8,8 @@ import json
 import threading
 import time
 from pygame import mixer
+import os
+import shutil
 
 def query(sql, params):
     res =cur.execute(sql, params)
@@ -30,7 +32,6 @@ def ui():
 def search():
     x = request.query.search
     x = '%' + x + '%'
-    #sql = "select distinct albumartist as artist, album from library where album like ? or artist like ? or albumartist like ? order by artist, album"
     sql = """
         select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist 
         from (select distinct albumartist, album from library where album like ? or artist like ? or albumartist like ?) sq 
@@ -40,7 +41,6 @@ def search():
     res =cur.execute(sql, (x,x,x))
     rows = res.fetchall()
     result = [dict(row) for row in rows]
-    #return rows
     return json.dumps(result)
 
 @route('/album')
@@ -102,6 +102,7 @@ def play():
 
     cur.execute("update queue set canplay = 1")
     con.commit()
+    cache_playlist()
     thread = threading.Thread(target=playasync)
     thread.start()
     return """{"status" : "play started"}"""
@@ -150,7 +151,7 @@ def playasync():
     con2.row_factory = sqlite3.Row
     cur2 = con2.cursor()
     while True:
-        result = cur2.execute("select q.id, l.filename from queue q inner join library l on q.libraryid = l.id where canplay = 1 order by q.id limit 1")
+        result = cur2.execute("select q.id, l.filename, l.id as libraryid from queue q inner join library l on q.libraryid = l.id where canplay = 1 order by q.id limit 1")
         rows = result.fetchall()
         if len(rows) == 0:
             return
@@ -158,16 +159,32 @@ def playasync():
         for row in rows:
             cur2.execute("update queue set playing = datetime('now') where id = ?",(row['id'],))
             con2.commit()
-            print(f"playing song {row['filename']}")
-            mixer.music.load(row['filename'])
+            filename = row['filename']
+            id = row["libraryid"]
+            cache_file = os.path.join(config["cache"], f"{id}.mp3")
+            if os.path.isfile(cache_file):
+                filename = cache_file
+            print(f"playing song {filename}")
+            mixer.music.load(filename)
             mixer.music.play()
             while mixer.music.get_busy():  # wait for music to finish playing
                 time.sleep(1)
 
-            print(f"finished playing song {row['filename']}")
+            print(f"finished playing song {filename}")
             cur2.execute("delete from queue where id = ?",(row['id'],))
             con2.commit()
             print(f"delete song from playlist")
+
+def cache_playlist():
+    results = query("select l.filename, l.id from queue q inner join library l on q.libraryid = l.id", ())
+    for row in results:
+        id = row["id"]
+        from_file = row["filename"]
+        to_file = os.path.join(config["cache"], f"{id}.mp3")
+        if os.path.isfile(to_file) == False:
+            print(f"caching file {from_file} to {to_file}")
+            shutil.copyfile(from_file, to_file)
+
 
 ##### ENTRY POINT #####
 con = sqlite3.connect("musiclibrary.db")
