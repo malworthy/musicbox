@@ -18,15 +18,11 @@ def query(sql, params):
 
 @route('/ui')
 def ui():
-    return static_file("ui.html","./")
+    return static_file("ui.html","./ui/")
 
-@route('/js')
-def ui():
-    return static_file("ui.js","./")
-
-@route('/css')
-def ui():
-    return static_file("ui.css","./")
+@route('/ui/<file>')
+def ui2(file):
+    return static_file(file,"./ui/")
 
 @route('/search')
 def search():
@@ -102,7 +98,6 @@ def play():
 
     cur.execute("update queue set canplay = 1")
     con.commit()
-    cache_playlist()
     thread = threading.Thread(target=playasync)
     thread.start()
     return """{"status" : "play started"}"""
@@ -174,17 +169,6 @@ def playasync():
             cur2.execute("delete from queue where id = ?",(row['id'],))
             con2.commit()
             print(f"delete song from playlist")
-
-def cache_playlist():
-    results = query("select l.filename, l.id from queue q inner join library l on q.libraryid = l.id", ())
-    for row in results:
-        id = row["id"]
-        from_file = row["filename"]
-        to_file = os.path.join(config["cache"], f"{id}.mp3")
-        if os.path.isfile(to_file) == False:
-            print(f"caching file {from_file} to {to_file}")
-            shutil.copyfile(from_file, to_file)
-
 
 ##### ENTRY POINT #####
 con = sqlite3.connect("musiclibrary.db")

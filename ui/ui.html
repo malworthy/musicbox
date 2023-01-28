@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MusicBox</title>
+    <!-- <link
+      href="https://fonts.googleapis.com/css?family=Press+Start+2P"
+      rel="stylesheet"
+    />  -->
+    <link href="https://unpkg.com/nes.css/css/nes.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/ui/ui.css" />
+  </head>
+  <body>
+    <div class="container">
+      <script src="/ui/ui.js"></script>
+      <h1>MusicBox Server</h1>
+      <div id="status">Not Playing</div>
+      <button class="nes-btn" id="play">Play</button>
+      <div class="padded">
+        <label>Enter artist name or album</label>
+        <input class="nes-input is-dark" type="text" id="search" />
+        <button class="nes-btn is-primary" onclick="getAlbums()">Search</button>
+        <button class="nes-btn" id="queue" onclick="getQueue()">Queue</button>
+      </div>
+      <table id="albums">
+        <thead id="tablehead"></thead>
+        <tbody id="albumsbody"></tbody>
+      </table>
+    </div>
+  </body>
+</html>

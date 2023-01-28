@@ -1,6 +1,18 @@
+@font-face {
+    font-family: myFirstFont;
+    src: url(kongtext.ttf);
+}
+
 body {
   background-color: black;
   color: green;
+  font-family: myFirstFont;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: 50px;
 }
 
 .blink {
