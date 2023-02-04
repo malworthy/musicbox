@@ -1,18 +1,165 @@
 @font-face {
-    font-family: myFirstFont;
-    src: url(kongtext.ttf);
+  font-family: kongtext;
+  src: url(kongtext.ttf);
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: black;
   color: green;
-  font-family: myFirstFont;
+  font-family: kongtext;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  background: orange;
+}
+
+nav ul {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 5px;
+  background: purple;
+}
+
+.footer ul {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  /*box-sizing: border-box;*/
+  padding-left: 20px;
+  padding-right: 20px;
+  background: purple;
+}
+
+li {
+  list-style: none;
+  margin-right: 20px;
+  /*font-size: 25px;
+  font-weight: bold;*/
+}
+
+li a {
+  text-decoration: none;
+  color: #1ac;
+}
+
+section {
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  font-size: 50px;
+  font-weight: bold;
+  background: #eee;
+}
+
+.footer {
+  padding: 0px;
+  background: purple;
+  color: #da2;
+  position: sticky;
+  bottom: 0;
+  margin-top: 0;
+}
+
+.container {
+  max-width: 1200px;
+  /*margin: 0 auto;*/
+
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 0px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+th,
+td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+tr:hover {
+  background: #151515;
+}
+
+button {
+  border: 4px outset gray;
+  background-color: black;
+  color: white;
+  cursor: pointer;
+  font-family: kongtext;
+  padding: 7px;
+}
+
+button:hover {
+  background-color: blue;
+  color: white;
+}
+
+input {
+  background-color: black;
+  color: green;
+  font-family: kongtext;
+  padding: 10px;
+}
+
+.bright {
+  color: lightgreen;
+}
+
+/*
+@font-face {
+    font-family: kongtext;
+    src: url(kongtext.ttf);
+} 
+
+body {
+  background-color: black;
+  color: green;
+  font-family: kongtext; 
+  box-sizing: border-box;
+}
+
+input {
+  background-color: black;
+  color: green;
+  font-family: kongtext; 
+  padding: 10px;
+}
+
+h1 {
+  color: yellow;
+}
+
+button {
+  border: 4px outset gray;
+  background-color: black;
+  color: white;
+  cursor:pointer;
+  font-family: kongtext; 
+  padding: 10px;
+}
+
+button:hover {
+  background-color: blue;
+  color:white;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  margin-top: 50px;
 }
 
 .blink {
@@ -42,3 +189,24 @@ td {
 }
 
 tr:hover { background: #151515; }
+
+
+.fixed-header, .fixed-footer{
+
+  position: sticky;
+  z-index: 999;
+}
+
+.fixed-header{
+  top: 0;
+}
+
+.fixed-footer{
+  bottom: 0;
+} 
+
+.content {
+  height: calc(100vh - 60px);
+  overflow:scroll;
+}
+*/
