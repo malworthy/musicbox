@@ -1,7 +1,7 @@
-@font-face {
+/*@font-face {
   font-family: kongtext;
   src: url(kongtext.ttf);
-}
+}*/
 
 html {
   margin: 0;
@@ -13,6 +13,7 @@ body {
   background-color: black;
   color: green;
   font-family: kongtext;
+  /* font-size: x-small; */
 }
 
 nav {
@@ -28,6 +29,23 @@ nav ul {
   box-sizing: border-box;
   padding: 5px;
   background: purple;
+}
+
+.content-list {
+  width: 100%;
+  display: grid;
+  /*justify-content: flex-start;*/
+  box-sizing: border-box;
+  padding: 0px;  
+}
+
+.content-list li {
+  margin: 5px;
+  background: gray;
+  color: black;
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
 }
 
 .footer ul {
@@ -49,7 +67,10 @@ li {
 
 li a {
   text-decoration: none;
-  color: #1ac;
+  color: blue;
+}
+.content-list li div {
+  max-width: 70%;
 }
 
 section {
@@ -100,6 +121,7 @@ button {
   color: white;
   cursor: pointer;
   font-family: kongtext;
+  /* font-size: x-small; */
   padding: 7px;
 }
 
@@ -112,6 +134,7 @@ input {
   background-color: black;
   color: green;
   font-family: kongtext;
+  /* font-size: smaller; */
   padding: 10px;
 }
 
@@ -119,94 +142,3 @@ input {
   color: lightgreen;
 }
 
-/*
-@font-face {
-    font-family: kongtext;
-    src: url(kongtext.ttf);
-} 
-
-body {
-  background-color: black;
-  color: green;
-  font-family: kongtext; 
-  box-sizing: border-box;
-}
-
-input {
-  background-color: black;
-  color: green;
-  font-family: kongtext; 
-  padding: 10px;
-}
-
-h1 {
-  color: yellow;
-}
-
-button {
-  border: 4px outset gray;
-  background-color: black;
-  color: white;
-  cursor:pointer;
-  font-family: kongtext; 
-  padding: 10px;
-}
-
-button:hover {
-  background-color: blue;
-  color:white;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.blink {
-  animation: blinker 1s step-start infinite;
-}
-.bright {
-  color: lightgreen;
-}
-
-@keyframes blinker {
-  50% {
-    opacity: 0;
-  }
-}
-
-.padded {
-  padding-top: 20px;
-  padding-bottom: 20px;
-}
-
-th,
-td {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-tr:hover { background: #151515; }
-
-
-.fixed-header, .fixed-footer{
-
-  position: sticky;
-  z-index: 999;
-}
-
-.fixed-header{
-  top: 0;
-}
-
-.fixed-footer{
-  bottom: 0;
-} 
-
-.content {
-  height: calc(100vh - 60px);
-  overflow:scroll;
-}
-*/
