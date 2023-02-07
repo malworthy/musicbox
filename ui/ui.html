@@ -6,11 +6,11 @@
     <title>MusicBox</title>
     <link rel="stylesheet" href="/ui/ui.css" />
   </head>
-  <body>
+  <body >
     <script src="/ui/ui.js"></script>
     <nav class="nav">
       <ul>
-        <li style="padding-top: 8px;">MusicBox</li>
+        <!-- <li style="padding-top: 8px;">MusicBox</li> -->
         <li><input placeholder="artist or album" type="text" id="search" /></li>
         <li>
           <button class="nes-btn is-primary" onclick="getAlbums()">
@@ -18,66 +18,32 @@
           </button>
         </li>
         <li>
-          <button class="nes-btn" id="queue" onclick="getQueue()">Queue</button>
+          <button class="nes-btn"  onclick="getQueue()">Queue</button>
         </li>
       </ul>
     </nav>
     <div class="container">
-      <table id="albums">
-        <thead id="tablehead"></thead>
-        <tbody id="albumsbody"></tbody>
-      </table>
+      <ul class="content-list" id = "content">
+        <li class="content-item">
+          <div>
+            <h3>1. Fixture Picture 4:07</h3>
+            <p>Aldous Harding - Designer</p>
+          </div>
+          <div>
+            <button>Play</button>
+            <button>Add</button>
+          </div>
+          
+        </li>
+      </ul>
     </div>
     <nav class="footer">
       <ul>
         <li><div style="padding-top: 6px;"><button class="nes-btn" id="play">Play</button></div></li>
         <li><div id="status">Not Playing</div></li>
+        <li style="margin-left: auto; padding-top: 15px;"><div id="queue">Queue: 999</div></li>
       </ul>
+      
     </nav>
-    <!-- <section id="first">First Section</section>
-  <section id="second">Second Section</section>
-  <section id="third">Third Section</section>
-  --></body>
+    </body>
 </html>
-
-<!--
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MusicBox</title>
-    <link rel="stylesheet" href="/ui/ui.css" />
-  </head>
-  <body>
-    <div class="container">
-      <script src="/ui/ui.js"></script>
-
-      <nav class="fixed-header">
-        <h1>MusicBox</h1>
-        <div id="status">Not Playing</div>
-        <button class="nes-btn" id="play">Play</button>
-        <div class="padded">
-          <input placeholder="artist or album" class="nes-input is-dark" type="text" id="search" />
-          <button class="nes-btn is-primary" onclick="getAlbums()">
-            Search
-          </button>
-          <button class="nes-btn" id="queue" onclick="getQueue()">Queue</button>
-        </div>
-      </nav>
-
-      <div class="content">
-        <table id="albums">
-          <thead id="tablehead"></thead>
-          <tbody id="albumsbody"></tbody>
-        </table>
-      </div>
-
-      <div class="fixed-footer">
-        this is a footer
-      </div>
-
-    </div>
-  </body>
-</html>
--->

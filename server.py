@@ -71,7 +71,6 @@ def remove():
     con.commit()
     return """{ "queueCount" : 0 }"""
 
-
 @route("/queue")
 def queue():
     result = query("select q.id as queueId, l.* from queue q inner join library l on q.libraryid = l.id",())

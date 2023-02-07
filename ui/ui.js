@@ -92,53 +92,47 @@ async function getAlbum(name) {
   var songs = await doAjax("GET", `album?search=${encodeURIComponent(name)}`);
   if (songs === null) return;
   let i = 1;
-  document.getElementById("tablehead").innerHTML = `<tr class="bright">
-      <td>#</td>
-      <td>Song</td>
-      <td>Artist</td>
-      <td>Album</td>
-      <td>Length</td>
-      </tr>`;
-  document.getElementById("albumsbody").innerHTML = "";
+  document.getElementById("content").innerHTML = "";
   for (const song of songs) {
-    const newRow = addRow([
-      i++,
-      song.tracktitle,
-      song.artist,
-      song.album,
-      fmtMSS(song.length),
-    ]);
-    addButton(newRow, "Play", () => playOneSong(song.id));
-    addButton(newRow, "Add", () => queueSong(song.id));
+    const listItem = document.createElement("li");
+    const divText = document.createElement("div");
+    divText.innerHTML = `<h4>${i++}. ${song.tracktitle} ${fmtMSS(song.length)}</h4>
+    <p>${song.artist} - ${song.album}</p>`;
+
+    const divButtons = document.createElement("div");
+    divButtons.appendChild(addButton("Play", () => playOneSong(song.id)));
+    divButtons.appendChild(addButton("Add", () => queueSong(song.id)));
+
+    listItem.appendChild(divText);
+    listItem.appendChild(divButtons);
+    document.getElementById("content").appendChild(listItem);
   }
 }
 
-function addButton(row, text, clickEvent) {
-  let newCell = row.insertCell(-1);
+function addButton(text, clickEvent) {
   let button = document.createElement("button");
   button.textContent = text;
   button.onclick = clickEvent;
-  newCell.appendChild(button);
+  return button;
 }
 
 async function getAlbums() {
   const search = document.getElementById("search").value;
   const albums = await doAjax("GET", `search?search=${search}`);
-  let i = 1;
-  document.getElementById("tablehead").innerHTML = `<tr class="bright">
-              <td>#</td>
-              <td>Artist</td>
-              <td>Album</td>
-              </tr>`;
-  document.getElementById("albumsbody").innerHTML = "";
+  
+  document.getElementById("content").innerHTML = "";
   for (const album of albums) {
-    const newRow = addRow([
-      i++,
-      `${album.artist}`,
-      `<a href="#" onclick="getAlbum('${encodeURIComponent(album.album).replace(/'/g, "%27")}')"> ${album.album}</a>`,
-    ]);
-    addButton(newRow, "Play", () => playAlbum(album.album, album.artist));
-    addButton(newRow, "Add", () => queueAlbum(album.album, album.artist));
+    const listItem = document.createElement("li");
+    const divText = document.createElement("div");
+    divText.innerHTML = `<h4>${album.artist}</h4><p><a href="#" onclick="getAlbum('${encodeURIComponent(album.album).replace(/'/g, "%27")}')"> ${album.album}</a></p>`;
+
+    const divButtons = document.createElement("div");
+    divButtons.appendChild(addButton("Play", () => playAlbum(album.album, album.artist)));
+    divButtons.appendChild(addButton("Add", () => queueAlbum(album.album, album.artist)));
+
+    listItem.appendChild(divText);
+    listItem.appendChild(divButtons);
+    document.getElementById("content").appendChild(listItem);
   }
 }
 
@@ -149,7 +143,7 @@ function fmtMSS(s) {
 async function removeFromQueue(id, row) {
   const result = await doAjax("DELETE",`${id}`);
   updateQueueStatus(result.queueCount);
-  row.innerHTML = "";
+  row.parentNode.removeChild(row);
 }
 
 async function playOneSong(id) {
@@ -158,26 +152,22 @@ async function playOneSong(id) {
 }
 
 async function getQueue() {
-  document.getElementById("tablehead").innerHTML = `<tr class="bright">
-    <td>#</td>
-    <td>Song</td>
-    <td>Artist</td>
-    <td>Album</td>
-    <td>Length</td>
-    </tr>`;
   const queue = await doAjax("GET", "queue");
   let i = 1;
-  document.getElementById("albumsbody").innerHTML = "";
+  document.getElementById("content").innerHTML = "";
+  
   for (const song of queue) {
-    const newRow = addRow([
-      i++,
-      song.tracktitle,
-      song.artist,
-      song.album,
-      fmtMSS(song.length),
-    ]);
-    addButton(newRow, "Del", () => removeFromQueue(song.queueId, newRow));
+    const listItem = document.createElement("li");
+    const divText = document.createElement("div");
+    divText.innerHTML = `<h4>${i++}. ${song.tracktitle} ${fmtMSS(song.length)}</h4>
+    <p>${song.artist} - ${song.album}</p>`;
+
+    const divButtons = document.createElement("div");
+    divButtons.appendChild(addButton("del", () => removeFromQueue(song.queueId, listItem)));
+
+    listItem.appendChild(divText);
+    listItem.appendChild(divButtons);
+    document.getElementById("content").appendChild(listItem);
   }
   updateQueueStatus(i-1);
 }
-//https://ondemand.rrr.org.au/getstream?id=wsmq
