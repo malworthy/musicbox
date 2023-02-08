@@ -6,24 +6,27 @@ import sqlite3
 import json
 import sys
 
-def get_files():
+def get_files(ext):
     print("Retreiving files")
     f = open("config.json")
     config = json.load(f)
     f.close()
 
-    return glob.glob(f"{config['library']}**/*.mp3", recursive=True)
+    return glob.glob(f"{config['library']}**/*.{ext}", recursive=True)
 
-def extract_tags(full_refresh):
+def extract_tags(full_refresh, ext):
     data = []
     print("Extracting tags")
 
-    for file in get_files():
+    for file in get_files(ext):
         try:
-            print(file)      
             if full_refresh or is_file_in_library(file) == False:  
+                print(file)
                 tags = music_tag.load_file(file)
-                data.append( (file, str(tags["tracktitle"]), str(tags["artist"]), str(tags["album"]), str(tags["albumartist"]),int(tags["tracknumber"]),int(tags["#length"])) )
+                album = str(tags["album"])
+                if ext != "mp3":
+                    album += f" ({ext})"
+                data.append( (file, str(tags["tracktitle"]), str(tags["artist"]), album, str(tags["albumartist"]),int(tags["tracknumber"]),int(tags["#length"])) )
         except:
             print("Error, could not add this file")
     add_to_database(data, full_refresh)
@@ -53,7 +56,13 @@ except:
 
 full_refresh = True
 if len(sys.argv) > 1:
-    full_refresh = sys.argv[1] == "-a" or sys.argv[1] == "--add"
+    full_refresh = False # not (sys.argv[1] == "-a" or sys.argv[1] == "--add")
 
-extract_tags(full_refresh)
+if full_refresh:
+    print("Running a full refresh")
+else:
+    print("Adding new songs only")
+
+extract_tags(full_refresh, "mp3")
+extract_tags(full_refresh, "flac")
 print("finished")

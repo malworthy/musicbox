@@ -154,10 +154,7 @@ def playasync():
             cur2.execute("update queue set playing = datetime('now') where id = ?",(row['id'],))
             con2.commit()
             filename = row['filename']
-            id = row["libraryid"]
-            cache_file = os.path.join(config["cache"], f"{id}.mp3")
-            if os.path.isfile(cache_file):
-                filename = cache_file
+
             print(f"playing song {filename}")
             mixer.music.load(filename)
             mixer.music.play()
