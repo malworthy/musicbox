@@ -13,7 +13,7 @@
         <!-- <li style="padding-top: 8px;">MusicBox</li> -->
         <li><input placeholder="artist or album" type="text" id="search" /></li>
         <li>
-          <button class="nes-btn is-primary" onclick="getAlbums()">
+          <button onclick="processCommand()">
             Search
           </button>
         </li>
@@ -27,6 +27,11 @@
         <li class="content-item">
           <div>
             <h3>MuiscBox</h3>
+            <h4>Commands</h4>
+            <p>:clear - clear the current queue</p>
+            <p>:mix [name of mixtape] - save contents of current queue to a 'mixtape' (aka playlist)</p>
+            <p>:delmix [name of mixtape] - delete a mixtape</p>
+            <p>:rand [x] - add 'x' number of random songs to the queue</p>
           </div>
         </li>
       </ul>

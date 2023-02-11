@@ -1,6 +1,3 @@
-#pip install bottle
-#pip install bottle-cors-plugin
-#pip install pygame
 from bottle import route, post, run, request, app, static_file, delete
 from bottle_cors_plugin import cors_plugin
 import sqlite3
@@ -8,11 +5,9 @@ import json
 import threading
 import time
 from pygame import mixer
-import os
-import shutil
 
 def query(sql, params):
-    res =cur.execute(sql, params)
+    res = cur.execute(sql, params)
     rows = res.fetchall()
     return [dict(row) for row in rows]
 
@@ -26,8 +21,7 @@ def ui2(file):
 
 @route('/search')
 def search():
-    x = request.query.search
-    x = '%' + x + '%'
+    x = f"%${request.query.search}%"
     sql = """
         select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist 
         from (select distinct albumartist, album from library where album like ? or artist like ? or albumartist like ?) sq 
@@ -42,8 +36,7 @@ def search():
 @route('/album')
 def album():
     search = request.query.search
-  
-    sql =  sql = "select * from library where album = ? order by artist, album, cast(tracknumber as INT), filename"
+    sql = "select * from library where album = ? order by artist, album, cast(tracknumber as INT), filename"
     result = query(sql, (search,))
 
     return json.dumps(result)
@@ -134,8 +127,32 @@ def playalbum():
     cur.execute("insert into queue(libraryid) select id from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
     con.commit()
 
-    print(request.json)
     return play()
+
+@post('/rand/<num>')
+def random_queue(num):
+    cur.execute("delete from queue")
+    cur.execute(f"insert into queue(libraryid)  select id from library order by random() limit {num}", ())
+    con.commit()
+    return """{"status" : "success"}"""
+
+@post('/mix/<name>')
+def create_mixtape(name):
+    sql = """
+        insert into library(filename, tracktitle, artist, album, albumartist, tracknumber, length, year)
+        select l.filename, l.tracktitle,l.artist, ? as album, 'mixtape' as albumartist, q.id, l.length, l.year 
+        from queue q inner join library l on q.libraryid = l.id;
+    """
+    cur.execute("delete from library where albumartist = 'mixtape' and album = ?", (name,))
+    cur.execute(sql, (name,))
+    con.commit()
+    return """{"status" : "success"}"""
+
+@delete('/mix/<name>')
+def delete_mixtape(name):
+    cur.execute("delete from library where albumartist = 'mixtape' and album = ?", (name,))
+    con.commit()
+    return """{"status" : "success"}"""
 
 def is_playing():
     return False # for now just rely on is busy - but won't work in the 1 seconds between songs

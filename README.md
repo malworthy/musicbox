@@ -58,3 +58,47 @@ One the library has been updated, you can run the following to add any new songs
 python update_library.py --add
 ```
 
+## Install as a service
+
+Example of installing as a service on a rasperry pi.
+
+1) Create the following file
+sudo nano /etc/systemd/system/musicbox.service
+
+```
+[Unit]
+Description=MusicBox Music Server
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+User=pi
+WorkingDirectory=/home/pi/code/musicbox
+ExecStart=/usr/bin/python3 /home/pi/code/musicbox/server.py
+
+[Install]
+WantedBy=multi-user.target
+```
+
+2) Reload the daemon
+sudo systemctl daemon-reload
+
+3) Make sure service gets restarted on reboot
+sudo systemctl enable musicbox
+
+4) Start the service
+sudo systemctl start musicbox
+
+5) Check that it worked
+sudo systemctl status musicbox
+
+# User Guide
+
+Commands
+:clear - clear the current queue
+:mix [name of mixtape] - save contents of current queue to a 'mixtape' (aka playlist)
+:delmix [name of mixtape] - delete a mixtape
+:rand [x] - add 'x' number of random songs to the queue
+ 
+

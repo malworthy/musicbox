@@ -1,5 +1,3 @@
-const baseUrl = "";
-
 ready(updateStatus);
 
 function ready(fn) {
@@ -18,7 +16,7 @@ const doAjax = async (verb, endpoint, data = null) => {
     },
   };
   if (data != null) options.body = JSON.stringify(data);
-  const response = await fetch(`${baseUrl}/${endpoint}`, options); 
+  const response = await fetch(`/${endpoint}`, options); 
   if (response.ok) {
     return await response.json(); 
   } else {
@@ -55,17 +53,6 @@ async function stopPlay() {
 async function play() {
   await doAjax("POST", "play");
   updateStatus();
-}
-
-function addRow(columns) {
-  let tableRef = document.getElementById("albumsbody");
-  let newRow = tableRef.insertRow(-1);
-
-  for (const col of columns) {
-    let newCell = newRow.insertCell(-1);
-    newCell.innerHTML = col;
-  }
-  return newRow;
 }
 
 async function playAlbum(album, artist) {
@@ -114,6 +101,37 @@ function addButton(text, clickEvent) {
   button.textContent = text;
   button.onclick = clickEvent;
   return button;
+}
+
+async function doCommand(command) {
+  if(command == ':clear')
+    await doAjax('DELETE','all');
+  else if (command.startsWith(':mix '))
+  {
+    var name = command.substring(5);
+    await doAjax('POST',`mix/${name}`);
+  }
+  else if (command.startsWith(':delmix '))
+  {
+    var name = command.substring(8);
+    await doAjax('DELETE',`mix/${name}`);
+  }
+  else if (command.startsWith(':rand '));
+  {
+    var num = parseInt(command.substring(6));
+    if (num > 0) await doAjax('POST',`rand/${num}`);
+  }
+  document.getElementById("search").value = "";
+}
+
+async function processCommand() {
+  const command = document.getElementById("search").value;
+  if (command.length > 0 && command[0] == ':')
+    await doCommand(command);
+  else
+    await getAlbums();
+
+  await updateStatus();
 }
 
 async function getAlbums() {

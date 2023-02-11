@@ -5,6 +5,7 @@ import glob
 import sqlite3
 import json
 import sys
+import os
 
 def get_files(ext):
     print("Retreiving files")
@@ -26,9 +27,16 @@ def extract_tags(full_refresh, ext):
                 album = str(tags["album"])
                 if ext != "mp3":
                     album += f" ({ext})"
-                data.append( (file, str(tags["tracktitle"]), str(tags["artist"]), album, str(tags["albumartist"]),int(tags["tracknumber"]),int(tags["#length"])) )
+                data.append( (file, str(tags["tracktitle"]), str(tags["artist"]), \
+                    album, str(tags["albumartist"]),int(tags["tracknumber"]),int(tags["#length"]), str(tags["year"])) )
         except:
-            print("Error, could not add this file")
+            song = os.path.basename(file)
+            artist = "Unknown Artist"
+            album = "Unknown Album"
+            track_number = 0
+            length = 0
+            data.append((file, song, artist, album, artist, track_number, length, 0))
+            print("Error, could not extract tags from this file")
     add_to_database(data, full_refresh)
 
 def is_file_in_library(filename):
@@ -40,19 +48,23 @@ def add_to_database(data, full_refresh):
     print("Inserting records into database")
     if full_refresh:
         cur.execute("delete from library")
-    cur.executemany("insert into library(filename, tracktitle, artist, album, albumartist, tracknumber, length) values(?,?,?,?,?,?,?)", data)
+    cur.executemany("insert into library(filename, tracktitle, artist, album, albumartist, tracknumber, length, year) values(?,?,?,?,?,?,?,?)", data)
     cur.execute("update library set albumartist = artist where albumartist = ''")
     con.commit()
+
+def schema_upgrade(sql):
+    try:
+        cur.execute(sql)
+    except:
+        pass
 
 ## main entry point ##
 
 con = sqlite3.connect("musiclibrary.db")
 cur = con.cursor()
-try:
-    cur.execute("create table library(id INTEGER PRIMARY KEY, filename text, tracktitle text, artist text, album text, albumartist text, tracknumber int, length int)")
-    cur.execute("create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text, canplay int)")
-except:
-    pass
+schema_upgrade("create table library(id INTEGER PRIMARY KEY, filename text, tracktitle text, artist text, album text, albumartist text, tracknumber int, length int)")
+schema_upgrade("create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text, canplay int)")
+schema_upgrade("alter table library add year text")
 
 full_refresh = True
 if len(sys.argv) > 1:
@@ -64,5 +76,5 @@ else:
     print("Adding new songs only")
 
 extract_tags(full_refresh, "mp3")
-extract_tags(full_refresh, "flac")
+extract_tags(False, "flac")
 print("finished")
