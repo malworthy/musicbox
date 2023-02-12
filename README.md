@@ -30,12 +30,14 @@ Create a config.json file:
 {
     "library" : "/path/to/library/",
     "host" : "localhost",
-    "port" : 8080
+    "port" : 8080,
+    "extensions" : ["mp3", "flac"]
 }
 ```
 - Change "library" to point to your music library.
 - Change "host" to "0.0.0.0" to allow remote connections to the server.
 - Change "port" if need the server to run on a different port.
+- Supported audio formats: mp3, ogg, wav and flac.
 
 
 Update database with library:
@@ -96,9 +98,9 @@ sudo systemctl status musicbox
 # User Guide
 
 Commands
-:clear - clear the current queue
-:mix [name of mixtape] - save contents of current queue to a 'mixtape' (aka playlist)
-:delmix [name of mixtape] - delete a mixtape
-:rand [x] - add 'x' number of random songs to the queue
+- :clear - clear the current queue
+- :mix [name of mixtape] - save contents of current queue to a 'mixtape' (aka playlist)
+- :delmix [name of mixtape] - delete a mixtape
+- :rand [x] - add 'x' number of random songs to the queue
  
 

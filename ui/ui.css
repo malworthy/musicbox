@@ -12,7 +12,8 @@ html {
 body {
   background-color: black;
   color: green;
-  font-family: kongtext;
+  font-family: monospace;
+  font-size: 12pt;
   /* font-size: x-small; */
 }
 
@@ -69,8 +70,13 @@ li a {
   text-decoration: none;
   color: blue;
 }
+
 .content-list li div {
   max-width: 70%;
+}
+
+.instructions {
+  max-width: 100%;
 }
 
 section {
@@ -120,7 +126,7 @@ button {
   background-color: black;
   color: white;
   cursor: pointer;
-  font-family: kongtext;
+  font-family: monospace;
   /* font-size: x-small; */
   padding: 7px;
 }
@@ -133,7 +139,7 @@ button:hover {
 input {
   background-color: black;
   color: green;
-  font-family: kongtext;
+  font-family: monospace;
   /* font-size: smaller; */
   padding: 10px;
 }
