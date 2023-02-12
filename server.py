@@ -21,7 +21,7 @@ def ui2(file):
 
 @route('/search')
 def search():
-    x = f"%${request.query.search}%"
+    x = f"%{request.query.search}%"
     sql = """
         select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist 
         from (select distinct albumartist, album from library where album like ? or artist like ? or albumartist like ?) sq 
