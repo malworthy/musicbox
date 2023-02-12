@@ -16,10 +16,10 @@ def convert_files(ext):
     for file in get_files(ext):
         print(file)
         outfile = file.replace(".m4a",".mp3")
-        cmd = f"ffmpeg -i \"{file}\" -ab `ffmpeg -i \"{file}\" 2>&1 | grep Audio | awk -F', ' '{{print $5}}' | cut -d' ' -f1`k -map_metadata 0 -id3v2_version 3 -write_id3v1 1 \"{outfile}\""
-        #cmd = f"ffmpeg -i \"{file}\" -c:v copy -c:a libmp3lame -q:a 0 \"{outfile}\""
-        print(cmd)
-        subprocess.call(cmd, shell=True)
+        if not os.path.isfile(outfile):
+            cmd = f"ffmpeg -i \"{file}\" -ab `ffmpeg -i \"{file}\" 2>&1 | grep Audio | awk -F', ' '{{print $5}}' | cut -d' ' -f1`k -map_metadata 0 -id3v2_version 3 -write_id3v1 1 \"{outfile}\""
+            print(cmd)
+            subprocess.call(cmd, shell=True)
 
 ## main entry point ##
 
