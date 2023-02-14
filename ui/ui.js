@@ -1,4 +1,9 @@
-ready(updateStatus);
+ready(start);
+
+function start() {
+  updateStatus();
+  setInterval(() => updateStatus(), 1000 * 10);
+}
 
 function ready(fn) {
   if (document.readyState !== "loading") {

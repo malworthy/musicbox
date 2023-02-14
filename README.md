@@ -4,8 +4,6 @@ A lightweight music server for playing local files, with a retro user interface.
 
 Written in python and vanilla.js.
 
-***Still in development - not ready for general use just yet***
-
 ## installing/running
 
 Install the following python dependencies:
