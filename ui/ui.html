@@ -6,11 +6,10 @@
     <title>MusicBox</title>
     <link rel="stylesheet" href="/ui/ui.css" />
   </head>
-  <body >
+  <body>
     <script src="/ui/ui.js"></script>
     <nav class="nav">
       <ul>
-        <!-- <li style="padding-top: 8px;">MusicBox</li> -->
         <li><input placeholder="artist or album" type="text" id="search" /></li>
         <li>
           <button onclick="processCommand()">
@@ -18,7 +17,7 @@
           </button>
         </li>
         <li>
-          <button class="nes-btn"  onclick="getQueue()">Queue</button>
+          <button onclick="getQueue()">Queue</button>
         </li>
       </ul>
     </nav>
@@ -38,11 +37,10 @@
     </div>
     <nav class="footer">
       <ul>
-        <li><div style="padding-top: 6px;"><button class="nes-btn" id="play">Play</button></div></li>
+        <li><div style="padding-top: 6px;"><button id="play">Play</button></div></li>
         <li><div id="status">Not Playing</div></li>
         <li style="margin-left: auto; padding-top: 15px;"><div id="queue">Queue: 999</div></li>
       </ul>
-      
     </nav>
     </body>
 </html>

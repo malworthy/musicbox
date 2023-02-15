@@ -1,8 +1,3 @@
-/*@font-face {
-  font-family: kongtext;
-  src: url(kongtext.ttf);
-}*/
-
 html {
   margin: 0;
   padding: 0;
@@ -14,7 +9,6 @@ body {
   color: green;
   font-family: monospace;
   font-size: 12pt;
-  /* font-size: x-small; */
 }
 
 nav {
@@ -35,7 +29,6 @@ nav ul {
 .content-list {
   width: 100%;
   display: grid;
-  /*justify-content: flex-start;*/
   box-sizing: border-box;
   padding: 0px;  
 }
@@ -53,7 +46,6 @@ nav ul {
   width: 100%;
   display: flex;
   justify-content: flex-start;
-  /*box-sizing: border-box;*/
   padding-left: 20px;
   padding-right: 20px;
   background: purple;
@@ -62,8 +54,6 @@ nav ul {
 li {
   list-style: none;
   margin-right: 20px;
-  /*font-size: 25px;
-  font-weight: bold;*/
 }
 
 li a {
@@ -99,8 +89,6 @@ section {
 
 .container {
   max-width: 1200px;
-  /*margin: 0 auto;*/
-
   min-height: 100vh;
   margin: 0 auto;
   padding: 0px;
@@ -109,25 +97,12 @@ section {
   flex-direction: column;
 }
 
-th,
-td {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-tr:hover {
-  background: #151515;
-}
-
 button {
   border: 4px outset gray;
   background-color: black;
   color: white;
   cursor: pointer;
   font-family: monospace;
-  /* font-size: x-small; */
   padding: 7px;
 }
 
@@ -140,7 +115,6 @@ input {
   background-color: black;
   color: green;
   font-family: monospace;
-  /* font-size: smaller; */
   padding: 10px;
 }
 

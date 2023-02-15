@@ -186,7 +186,7 @@ async function getQueue() {
     <p>${song.artist} - ${song.album}</p>`;
 
     const divButtons = document.createElement("div");
-    divButtons.appendChild(addButton("del", () => removeFromQueue(song.queueId, listItem)));
+    divButtons.appendChild(addButton("Del", () => removeFromQueue(song.queueId, listItem)));
 
     listItem.appendChild(divText);
     listItem.appendChild(divButtons);
