@@ -43,7 +43,7 @@ def album():
 
 @post('/add/<id>')
 def add(id):
-    sql = "insert into queue(libraryid) values(?)"
+    sql = "insert into queue(libraryid, canplay) values(?, 1)"
     result = cur.execute(sql, (id, ))
     con.commit()
     result = query("select count(*) as queueCount from queue",())
@@ -104,7 +104,7 @@ def stop():
 @post('/queuealbum')
 def queuealbum():
     params = request.json
-    cur.execute("insert into queue(libraryid) select id from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
+    cur.execute("insert into queue(libraryid, canplay) select id, 1 from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
     con.commit()
 
     return """{"status" : "queued"}""" 
@@ -189,6 +189,7 @@ con.row_factory = sqlite3.Row
 cur = con.cursor()
 
 f = open("config.json")
+
 config = json.load(f)
 f.close()
 
