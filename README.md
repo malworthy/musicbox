@@ -53,10 +53,6 @@ http://localhost:8080/ui
 
 NOTE: replace 'localhost' with the address of server you are running off.   
 
-One the library has been updated, you can run the following to add any new songs:
-```
-python update_library.py --add
-```
 
 ## Install as a service
 
