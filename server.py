@@ -105,6 +105,8 @@ def play():
     con.commit()
 
     next_song = get_next_song(con)
+    if next_song == None:
+        return """{"status" : "no songs in queue"}"""
 
     con.execute(
         "update queue set playing = datetime('now') where id = ?", (next_song['id'],))
@@ -187,10 +189,6 @@ def delete_mixtape(name):
     return """{"status" : "success"}"""
 
 
-def is_playing():
-    return False  # for now just rely on is busy - but won't work in the 1 seconds between songs
-
-
 def get_next_song(db_conn):
     get_song_sql = """select q.id, l.filename, l.id as libraryid 
             from queue q inner join library l on q.libraryid = l.id 
@@ -202,11 +200,6 @@ def get_next_song(db_conn):
 def playasync(row):
     con2 = sqlite3.connect("musiclibrary.db")
     con2.row_factory = sqlite3.Row
-    cur2 = con2.cursor()
-
-    # row = get_next_song(con2)
-    if row == None:
-        return
 
     filename = row['filename']
     id = row['id']
@@ -229,12 +222,14 @@ def playasync(row):
         while wait:
             print(" -- in wait loop --")
             time.sleep(1)
+            if not mixer.music.get_busy():
+                wait = False
             for event in pygame.event.get():
                 if event.type == 1:
                     wait = False
 
         print(f"finished playing song {filename} and deleting from queue")
-        cur2.execute("delete from queue where id = ?", (id,))
+        con2.execute("delete from queue where playing is not null")
         con2.commit()
 
         if songs_in_queue == False:
@@ -253,7 +248,7 @@ def playasync(row):
         filename = row['filename']
         id = row['id']
         con2.execute(
-            "update queue set playing = datetime('now') where id = ?", (id,))
+            "update queue set playing = datetime('now') where id = ? and canplay = 1", (id,))
         con2.commit()
 
 
