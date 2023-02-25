@@ -27,13 +27,15 @@ def ui2(file):
 @route('/search')
 def search():
     x = f"%{request.query.search}%"
+    print(x)
     sql = """
         select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist 
         from (select distinct albumartist, album from library where album like ? or artist like ? or albumartist like ?) sq 
         group by album
         order by artist;
     """
-    return json.dumps(query(sql, (x, x, x)))
+    result = query(sql, (x, x, x))
+    return json.dumps(result)
 
 
 @route('/album')
@@ -99,9 +101,15 @@ def play():
     if mixer.music.get_busy():
         return """{"status" : "already playing"}"""
 
-    cur.execute("update queue set canplay = 1")
+    con.execute("update queue set canplay = 1")
     con.commit()
-    thread = threading.Thread(target=playasync)
+
+    next_song = get_next_song(con)
+
+    con.execute(
+        "update queue set playing = datetime('now') where id = ?", (next_song['id'],))
+    con.commit()
+    thread = threading.Thread(target=playasync, args=(next_song,))
     thread.start()
     return """{"status" : "play started"}"""
 
@@ -183,51 +191,70 @@ def is_playing():
     return False  # for now just rely on is busy - but won't work in the 1 seconds between songs
 
 
-def playasync():
+def get_next_song(db_conn):
+    get_song_sql = """select q.id, l.filename, l.id as libraryid 
+            from queue q inner join library l on q.libraryid = l.id 
+            where canplay = 1 and playing is null order by q.id limit 1"""
+    curs = db_conn.execute(get_song_sql)
+    return curs.fetchone()
+
+
+def playasync(row):
     con2 = sqlite3.connect("musiclibrary.db")
     con2.row_factory = sqlite3.Row
     cur2 = con2.cursor()
-    get_song_sql = """select q.id, l.filename, l.id as libraryid 
-            from queue q inner join library l on q.libraryid = l.id 
-            where canplay = 1 order by q.id limit 1"""
 
-    result = cur2.execute(get_song_sql)
-    rows = result.fetchall()
-    if len(rows) == 0:
+    # row = get_next_song(con2)
+    if row == None:
         return
-    row = rows[0]
+
     filename = row['filename']
     id = row['id']
     mixer.music.load(row['filename'])
+    print(f"Playing song {filename}")
     mixer.music.play()
     mixer.music.set_endevent(1)
-    cur2.execute(
-        "update queue set playing = datetime('now') where id = ?", (id,))
-    con2.commit()
 
     songs_in_queue = True
     while songs_in_queue:
-        result = cur2.execute(get_song_sql)
-        rows = result.fetchall()
-        if len(rows) > 0:
-            row = rows[0]
+
+        row = get_next_song(con2)
+        if row != None:
             mixer.music.queue(row['filename'])
         else:
+            print("no more songs in queue")
             songs_in_queue = False
 
         wait = True
         while wait:
+            print(" -- in wait loop --")
             time.sleep(1)
             for event in pygame.event.get():
                 if event.type == 1:
                     wait = False
 
-        print(f"finished playing song {filename}")
+        print(f"finished playing song {filename} and deleting from queue")
         cur2.execute("delete from queue where id = ?", (id,))
         con2.commit()
-        print(f"delete song from playlist")
+
+        if songs_in_queue == False:
+            row = get_next_song(con2)
+            if row != None:
+                print(
+                    "a song was added to the queue after the last song started playing")
+                mixer.music.load(row['filename'])
+                mixer.music.play()
+                mixer.music.set_endevent(1)
+                songs_in_queue = True
+            else:
+                print("at the end of the queue - exiting play loop")
+                return
+
         filename = row['filename']
         id = row['id']
+        con2.execute(
+            "update queue set playing = datetime('now') where id = ?", (id,))
+        con2.commit()
 
 
 ##### ENTRY POINT #####
