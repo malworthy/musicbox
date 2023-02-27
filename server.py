@@ -9,7 +9,7 @@ import pygame
 
 
 def query(sql, params):
-    res = cur.execute(sql, params)
+    res = con.execute(sql, params)
     rows = res.fetchall()
     return [dict(row) for row in rows]
 
@@ -50,7 +50,7 @@ def album():
 @post('/add/<id>')
 def add(id):
     sql = "insert into queue(libraryid, canplay) values(?, 1)"
-    result = cur.execute(sql, (id, ))
+    result = con.execute(sql, (id, ))
     con.commit()
     result = query("select count(*) as queueCount from queue", ())
     return json.dumps(result[0])
@@ -59,7 +59,7 @@ def add(id):
 @delete('/<id>')
 def remove(id):
     sql = "delete from queue where id = ?"
-    cur.execute(sql, (id, ))
+    con.execute(sql, (id, ))
     con.commit()
     result = query("select count(*) as queueCount from queue", ())
     return json.dumps(result[0])
@@ -68,7 +68,7 @@ def remove(id):
 @delete('/all')
 def remove():
     sql = "delete from queue"
-    cur.execute(sql)
+    con.execute(sql)
     con.commit()
     return """{ "queueCount" : 0 }"""
 
@@ -118,8 +118,8 @@ def play():
 
 @post('/stop')
 def stop():
-    cur.execute("update queue set canplay = 0")
-    cur.execute("delete from queue where playing is not null")
+    con.execute("update queue set canplay = 0")
+    con.execute("delete from queue where playing is not null")
     con.commit()
     mixer.music.stop()
     return """{"status" : "stopped"}"""
@@ -128,7 +128,7 @@ def stop():
 @post('/queuealbum')
 def queuealbum():
     params = request.json
-    cur.execute(
+    con.execute(
         "insert into queue(libraryid, canplay) select id, 1 from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
     con.commit()
 
@@ -139,7 +139,7 @@ def queuealbum():
 def playsong(id):
     if mixer.music.get_busy():
         return """{"status" : "already playing"}"""
-    cur.execute("delete from queue")
+    con.execute("delete from queue")
     add(id)
     return play()
 
@@ -150,8 +150,8 @@ def playalbum():
         return """{"status" : "already playing"}"""
 
     params = request.json
-    cur.execute("delete from queue")
-    cur.execute(
+    con.execute("delete from queue")
+    con.execute(
         "insert into queue(libraryid) select id from library where album = ? order by cast(tracknumber as INT), filename", (params["album"],))
     con.commit()
 
@@ -160,8 +160,8 @@ def playalbum():
 
 @post('/rand/<num>')
 def random_queue(num):
-    cur.execute("delete from queue")
-    cur.execute(
+    con.execute("delete from queue")
+    con.execute(
         f"insert into queue(libraryid)  select id from library order by random() limit {num}", ())
     con.commit()
     return """{"status" : "success"}"""
@@ -174,16 +174,16 @@ def create_mixtape(name):
         select l.filename, l.tracktitle,l.artist, ? as album, 'mixtape' as albumartist, q.id, l.length, l.year 
         from queue q inner join library l on q.libraryid = l.id;
     """
-    cur.execute(
+    con.execute(
         "delete from library where albumartist = 'mixtape' and album = ?", (name,))
-    cur.execute(sql, (name,))
+    con.execute(sql, (name,))
     con.commit()
     return """{"status" : "success"}"""
 
 
 @delete('/mix/<name>')
 def delete_mixtape(name):
-    cur.execute(
+    con.execute(
         "delete from library where albumartist = 'mixtape' and album = ?", (name,))
     con.commit()
     return """{"status" : "success"}"""
@@ -255,10 +255,8 @@ def playasync(row):
 ##### ENTRY POINT #####
 con = sqlite3.connect("musiclibrary.db")
 con.row_factory = sqlite3.Row
-cur = con.cursor()
 
 f = open("config.json")
-
 config = json.load(f)
 f.close()
 
