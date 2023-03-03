@@ -1,12 +1,13 @@
 # musicbox
 
-A lightweight music server for playing local files, with a retro user interface.  Like mopidy but without the streaming. Perfect for running on a raspberry pi.
+A lightweight music server for playing local files, with a retro user interface. Like mopidy but without the streaming. Perfect for running on a raspberry pi.
 
 Written in python and vanilla.js.
 
 ## installing/running
 
 Install the following python dependencies:
+
 ```
 pip install bottle
 pip install bottle-cors-plugin
@@ -15,15 +16,19 @@ pip install music-tag
 ```
 
 You may also need install some additional libraries (command for debian based systems):
+
 ```
 sudo apt-get install libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 libsdl2-2.0-0
 ```
 
 Clone the repository:
+
 ```
 git clone https://github.com/malworthy/musicbox.git
 ```
-Create a config.json file:  
+
+Create a config.json file:
+
 ```
 {
     "library" : "/path/to/library/",
@@ -32,18 +37,20 @@ Create a config.json file:
     "extensions" : ["mp3", "flac"]
 }
 ```
+
 - Change "library" to point to your music library.
 - Change "host" to "0.0.0.0" to allow remote connections to the server.
 - Change "port" if need the server to run on a different port.
 - Supported audio formats: mp3, ogg, wav and flac.
 
-
 Update database with library:
+
 ```
 python update_library.py
 ```
 
 Run the server:
+
 ```
 python server.py
 ```
@@ -51,15 +58,14 @@ python server.py
 Browse to UI:
 http://localhost:8080/ui
 
-NOTE: replace 'localhost' with the address of server you are running off.   
-
+NOTE: replace 'localhost' with the address of server you are running off.
 
 ## Install as a service
 
 Example of installing as a service on a rasperry pi.
 
-1) Create the following file
-sudo nano /etc/systemd/system/musicbox.service
+1. Create the following file
+   sudo nano /etc/systemd/system/musicbox.service
 
 ```
 [Unit]
@@ -77,24 +83,24 @@ ExecStart=/usr/bin/python3 /home/pi/code/musicbox/server.py
 WantedBy=multi-user.target
 ```
 
-2) Reload the daemon
-sudo systemctl daemon-reload
+2. Reload the daemon
+   sudo systemctl daemon-reload
 
-3) Make sure service gets restarted on reboot
-sudo systemctl enable musicbox
+3. Make sure service gets restarted on reboot
+   sudo systemctl enable musicbox
 
-4) Start the service
-sudo systemctl start musicbox
+4. Start the service
+   sudo systemctl start musicbox
 
-5) Check that it worked
-sudo systemctl status musicbox
+5. Check that it worked
+   sudo systemctl status musicbox
 
 # User Guide
 
 Commands
+
 - :clear - clear the current queue
 - :mix [name of mixtape] - save contents of current queue to a 'mixtape' (aka playlist)
 - :delmix [name of mixtape] - delete a mixtape
 - :rand [x] - add 'x' number of random songs to the queue
- 
-
+- :hist - show history of songs played

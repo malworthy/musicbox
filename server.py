@@ -1,11 +1,11 @@
 from bottle import route, post, run, request, app, static_file, delete
 from bottle_cors_plugin import cors_plugin
-import sqlite3
 import json
 import threading
-import time
 from pygame import mixer
 import pygame
+from player import playasync
+from data import create_connection, get_next_song, setplaying
 
 
 def query(sql, params):
@@ -80,6 +80,17 @@ def queue():
     return json.dumps(result)
 
 
+@route("/history")
+def history():
+    sql = """
+        select datetime(dateplayed,'localtime') as dateplayed, l.artist, l.tracktitle, l.album 
+        from history h 
+        inner join library l on l.id = h.libraryid 
+        order by dateplayed desc;
+    """
+    return json.dumps(query(sql, ()))
+
+
 @route("/status")
 def status():
     sql = """
@@ -107,10 +118,7 @@ def play():
     next_song = get_next_song(con)
     if next_song == None:
         return """{"status" : "no songs in queue"}"""
-
-    con.execute(
-        "update queue set playing = datetime('now') where id = ?", (next_song['id'],))
-    con.commit()
+    setplaying(next_song['id'], con)
     thread = threading.Thread(target=playasync, args=(next_song,))
     thread.start()
     return """{"status" : "play started"}"""
@@ -189,72 +197,8 @@ def delete_mixtape(name):
     return """{"status" : "success"}"""
 
 
-def get_next_song(db_conn):
-    get_song_sql = """select q.id, l.filename, l.id as libraryid 
-            from queue q inner join library l on q.libraryid = l.id 
-            where canplay = 1 and playing is null order by q.id limit 1"""
-    curs = db_conn.execute(get_song_sql)
-    return curs.fetchone()
-
-
-def playasync(row):
-    con2 = sqlite3.connect("musiclibrary.db")
-    con2.row_factory = sqlite3.Row
-
-    filename = row['filename']
-    id = row['id']
-    mixer.music.load(row['filename'])
-    print(f"Playing song {filename}")
-    mixer.music.play()
-    mixer.music.set_endevent(1)
-
-    songs_in_queue = True
-    while songs_in_queue:
-
-        row = get_next_song(con2)
-        if row != None:
-            mixer.music.queue(row['filename'])
-        else:
-            print("no more songs in queue")
-            songs_in_queue = False
-
-        wait = True
-        while wait:
-            print(" -- in wait loop --")
-            time.sleep(1)
-            if not mixer.music.get_busy():
-                wait = False
-            for event in pygame.event.get():
-                if event.type == 1:
-                    wait = False
-
-        print(f"finished playing song {filename} and deleting from queue")
-        con2.execute("delete from queue where playing is not null")
-        con2.commit()
-
-        if songs_in_queue == False:
-            row = get_next_song(con2)
-            if row != None:
-                print(
-                    "a song was added to the queue after the last song started playing")
-                mixer.music.load(row['filename'])
-                mixer.music.play()
-                mixer.music.set_endevent(1)
-                songs_in_queue = True
-            else:
-                print("at the end of the queue - exiting play loop")
-                return
-
-        filename = row['filename']
-        id = row['id']
-        con2.execute(
-            "update queue set playing = datetime('now') where id = ? and canplay = 1", (id,))
-        con2.commit()
-
-
 ##### ENTRY POINT #####
-con = sqlite3.connect("musiclibrary.db")
-con.row_factory = sqlite3.Row
+con = create_connection()
 
 f = open("config.json")
 config = json.load(f)

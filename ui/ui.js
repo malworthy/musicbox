@@ -116,10 +116,11 @@ async function doCommand(command) {
   } else if (command.startsWith(":delmix ")) {
     var name = command.substring(8);
     await doAjax("DELETE", `mix/${name}`);
-  } else if (command.startsWith(":rand "));
-  {
+  } else if (command.startsWith(":rand ")) {
     var num = parseInt(command.substring(6));
     if (num > 0) await doAjax("POST", `rand/${num}`);
+  } else if (command.startsWith(":hist")) {
+    await getHistory();
   }
   document.getElementById("search").value = "";
 }
@@ -188,4 +189,20 @@ async function getQueue() {
     document.getElementById("content").appendChild(listItem);
   }
   updateQueueStatus(i - 1);
+}
+
+async function getHistory() {
+  const hist = await doAjax("GET", "history");
+  document.getElementById("content").innerHTML = "";
+
+  for (const song of hist) {
+    const listItem = document.createElement("li");
+    const divText = document.createElement("div");
+    divText.innerHTML = `<h4>${song.tracktitle} </h4>
+    <p>Played on: ${song.dateplayed}</p>
+    <p>${song.artist} - ${song.album}</p>`;
+
+    listItem.appendChild(divText);
+    document.getElementById("content").appendChild(listItem);
+  }
 }
