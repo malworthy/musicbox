@@ -1,3 +1,5 @@
+let showingResults = false;
+
 ready(start);
 
 function start() {
@@ -29,24 +31,41 @@ const doAjax = async (verb, endpoint, data = null) => {
   }
 };
 
-async function updateStatus() {
+async function resetStatus() {
+  showingResults = false;
+  const songDetails = await doAjax("GET", "status");
+
+  if (songDetails.playing === 1) {
+    showCoverArt(songDetails.id);
+  } else {
+    showStartScreen();
+  }
+}
+
+async function updateStatus(updateContent = true) {
   const statusDiv = document.getElementById("status");
   const playBtn = document.getElementById("play");
   const songDetails = await doAjax("GET", "status");
 
   if (songDetails.playing === 1) {
-    statusDiv.innerHTML = `<p>Now playing: ${songDetails.tracktitle} by ${songDetails.artist}</p>`;
-    playBtn.innerHTML = "Stop";
-    playBtn.onclick = () => stopPlay();
+    const statusText = `<p>Now playing: ${songDetails.tracktitle} by ${songDetails.artist}</p>`;
+    if (statusDiv.innerHTML != statusText) {
+      statusDiv.innerHTML = statusText;
+      playBtn.innerHTML = "Stop";
+      playBtn.onclick = () => stopPlay();
+      if (updateContent && !showingResults) showCoverArt(songDetails.id);
+    }
   } else {
     statusDiv.innerHTML = "<p>Not Playing</p>";
     playBtn.innerHTML = "Play";
     playBtn.onclick = () => play();
+    if (updateContent && !showingResults) showStartScreen();
   }
   updateQueueStatus(songDetails.queueCount);
 }
 
 async function stopPlay() {
+  clearPaused();
   await doAjax("POST", "stop");
   const statusDiv = document.getElementById("status");
   const playBtn = document.getElementById("play");
@@ -55,18 +74,44 @@ async function stopPlay() {
   playBtn.onclick = () => play();
 }
 
+async function pause() {
+  result = await doAjax("POST", "pause");
+  setPaused(result.paused);
+}
+
+function clearPaused() {
+  const status = document.getElementById("status");
+  status.className = "";
+}
+
+function setPaused(paused) {
+  const status = document.getElementById("status");
+  status.className = paused ? "blink" : "";
+}
+
 async function play() {
-  await doAjax("POST", "play");
+  clearPaused();
+  showingResults = false;
+  const status = await doAjax("POST", "play");
+  //if (status.status === "play started") showCoverArt(status.id);
   updateStatus();
 }
 
 async function playAlbum(album, artist) {
-  await doAjax("POST", "playalbum", { album: album, artist: artist });
+  showingResults = false;
+  const status = await doAjax("POST", "playalbum", { album: album, artist: artist });
+  //if (status.status === "play started") showCoverArt(status.id);
   updateStatus();
 }
 
 async function queueAlbum(album, artist) {
   await doAjax("POST", "queuealbum", { album: album, artist: artist });
+  updateStatus();
+}
+
+async function skip() {
+  clearPaused();
+  await doAjax("POST", "skip");
   updateStatus();
 }
 
@@ -126,11 +171,12 @@ async function doCommand(command) {
 }
 
 async function processCommand() {
+  showingResults = true;
   const command = document.getElementById("search").value;
   if (command.length > 0 && command[0] == ":") await doCommand(command);
   else await getAlbums();
 
-  await updateStatus();
+  await updateStatus(false);
 }
 
 async function getAlbums() {
@@ -171,6 +217,7 @@ async function playOneSong(id) {
 }
 
 async function getQueue() {
+  showingResults = true;
   const queue = await doAjax("GET", "queue");
   let i = 1;
   document.getElementById("content").innerHTML = "";
@@ -205,4 +252,38 @@ async function getHistory() {
     listItem.appendChild(divText);
     document.getElementById("content").appendChild(listItem);
   }
+}
+
+function showCoverArt(id) {
+  const doc = document.getElementById("content");
+  doc.innerHTML = `
+  <img class="center" width=300 height=300 src="coverart/${id}" />
+  <div class="center">
+    <ul class="controls">
+      <li>
+        <button onclick="skip();">Skip</button>
+      </li>
+      <li>
+        <button id="pause" onclick="pause()">Pause</button>
+      </li>
+    </ul>
+  </div>
+  `;
+}
+
+function showStartScreen() {
+  const doc = document.getElementById("content");
+  doc.innerHTML = `
+        <li>
+          <div style="max-width: 100%;">
+            <h2>MuiscBox</h3>
+            <h3>Commands</h4>
+            <p><strong>:clear</strong>  - clear the current queue</p>
+            <p><strong>:mix [name of mixtape]</strong> - save contents of current queue to a 'mixtape' (aka playlist)</p>
+            <p><strong>:delmix [name of mixtape]</strong> - delete a mixtape</p>
+            <p><strong>:rand [x]</strong> - add 'x' number of random songs to the queue</p>
+            <p><strong>:hist</strong> - show history of songs played</p>
+          </div>
+        </li>
+  `;
 }

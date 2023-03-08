@@ -30,7 +30,7 @@ nav ul {
   width: 100%;
   display: grid;
   box-sizing: border-box;
-  padding: 0px;  
+  padding: 0px;
 }
 
 .content-list li {
@@ -122,3 +122,26 @@ input {
   color: lightgreen;
 }
 
+.blink {
+  animation: blinker 1s step-start infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.controls {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: 5px;
+}

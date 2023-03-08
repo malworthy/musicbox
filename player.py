@@ -1,4 +1,4 @@
-from data import create_connection, get_next_song, setplaying
+from data import create_connection, get_next_song, is_paused, setplaying
 from pygame import mixer
 import pygame
 import time
@@ -27,9 +27,11 @@ def playasync(row):
         wait = True
         while wait:
             print(" -- in wait loop --")
-            time.sleep(1)
-            if not mixer.music.get_busy():
+            time.sleep(0.1)
+            if not mixer.music.get_busy() and is_paused(con2) == False:
                 wait = False
+                songs_in_queue = False
+                print("stop pressed")
             for event in pygame.event.get():
                 if event.type == 1:
                     wait = False

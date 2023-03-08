@@ -61,6 +61,26 @@ def remove_orphans():
             con.commit()
 
 
+def update_cover_art():
+    print("updating/adding cover art")
+    cur.execute("select id, filename from library where coverart is null")
+    rows = cur.fetchall()
+    for row in rows:
+        id = row[0]
+        path = os.path.dirname(row[1])
+        coverart = ""
+        for ext in ["jpg", "png"]:
+            files = glob.glob(f"{path}**/*.{ext}", recursive=False)
+            if len(files) > 0:
+                coverart = files[0]
+                break
+        if coverart != "":
+            print(f"coverart '{coverart}' found")
+            con.execute(
+                "update library set coverart = ? where id = ?", (coverart, id))
+            con.commit()
+
+
 def add_to_database(data):
     print("Inserting records into database")
 
@@ -87,15 +107,17 @@ schema_upgrade(
 schema_upgrade("alter table library add year text")
 schema_upgrade(
     "create table history(id INTEGER PRIMARY KEY, libraryid int, dateplayed text)")
+schema_upgrade("alter table library add coverart text")
 
 f = open("config.json")
 config = json.load(f)
 f.close()
 
-for ext in config["extensions"]:
-    print(f" ----- Importing {ext} files ----- ")
-    extract_tags(ext)
+# for ext in config["extensions"]:
+#    print(f" ----- Importing {ext} files ----- ")
+#    extract_tags(ext)
 
-remove_orphans()
+# remove_orphans()
+update_cover_art()
 
 print("finished")

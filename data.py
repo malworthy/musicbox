@@ -13,10 +13,18 @@ def get_next_song(db_conn):
             from queue q inner join library l on q.libraryid = l.id 
             where canplay = 1 and playing is null order by q.id limit 1"""
     curs = db_conn.execute(get_song_sql)
-    return curs.fetchone()
+    result = curs.fetchone()
+    return result
 
 
 def setplaying(id, db_conn):
+    curs = db_conn.execute(
+        "select count(*) from queue where playing is not null")
+    is_playing = curs.fetchone()
+    if is_playing[0] > 0:
+        print("Attempting to set 2 songs as playing at once")
+        return
+
     db_conn.execute(
         "update queue set playing = datetime('now') where id = ?", (id,))
 
@@ -25,4 +33,16 @@ def setplaying(id, db_conn):
              from queue 
              where playing is not null"""
     db_conn.execute(sql)
+    db_conn.commit()
+
+
+def is_paused(db_conn):
+    curs = db_conn.execute(
+        "select count(*) from queue where playing is not null and canplay = 1")
+    result = curs.fetchone()
+    return result[0] > 0
+
+
+def reset_queue(db_conn):
+    db_conn.execute("update queue set playing = null, canplay = 1")
     db_conn.commit()

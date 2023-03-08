@@ -5,7 +5,9 @@ import threading
 from pygame import mixer
 import pygame
 from player import playasync
-from data import create_connection, get_next_song, setplaying
+from data import create_connection, get_next_song, reset_queue, setplaying
+import os
+import time
 
 
 def query(sql, params):
@@ -22,6 +24,16 @@ def ui():
 @route('/ui/<file>')
 def ui2(file):
     return static_file(file, "./ui/")
+
+
+@route('/coverart/<id>')
+def coverart(id):
+    result = query(
+        "select coverart from library where id = ? and coverart is not null", (id,))
+    if len(result) > 0:
+        path = os.path.dirname(result[0]["coverart"])
+        filename = os.path.basename(result[0]["coverart"])
+        return static_file(filename, path)
 
 
 @route('/search')
@@ -99,8 +111,11 @@ def status():
         where playing is not null
     """
     result = query(sql, ())
-    if len(result) == 1:
-        return json.dumps(result[0])
+    if len(result) >= 1:
+        dict = result[0]
+        dict['paused'] = not mixer.music.get_busy()
+
+        return json.dumps(dict)
 
     result = query(
         "select count(*) as queueCount , 0 as playing from queue", ())
@@ -121,7 +136,7 @@ def play():
     setplaying(next_song['id'], con)
     thread = threading.Thread(target=playasync, args=(next_song,))
     thread.start()
-    return """{"status" : "play started"}"""
+    return """{"status" : "play started", "id" : """ + f"{next_song['libraryid']}" + "}"
 
 
 @post('/stop')
@@ -131,6 +146,23 @@ def stop():
     con.commit()
     mixer.music.stop()
     return """{"status" : "stopped"}"""
+
+
+@post('/skip')
+def skip():
+    stop()
+    time.sleep(1)
+    return play()
+
+
+@post('/pause')
+def pause():
+    if mixer.music.get_busy():
+        mixer.music.pause()
+        return """{"paused" : true}"""
+    else:
+        mixer.music.unpause()
+        return """{"paused" : false}"""
 
 
 @post('/queuealbum')
@@ -200,6 +232,8 @@ def delete_mixtape(name):
 ##### ENTRY POINT #####
 con = create_connection()
 
+reset_queue(con)
+
 f = open("config.json")
 config = json.load(f)
 f.close()
@@ -208,4 +242,5 @@ app = app()
 app.install(cors_plugin('*'))
 pygame.init()
 mixer.init()
+
 run(host=config["host"], port=config["port"])
