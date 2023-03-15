@@ -38,15 +38,29 @@ def coverart(id):
 
 @route('/search')
 def search():
+    include_songs = len(request.query.search) > 1
     x = f"%{request.query.search}%"
     print(x)
     sql = """
-        select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist 
+        select album, case when count(*) > 1 then 'Various' else max(albumartist) end artist, null as tracktitle, 0 as id, 0 as length 
         from (select distinct albumartist, album from library where album like ? or artist like ? or albumartist like ?) sq 
-        group by album
-        order by artist;
+        group by album       
     """
-    result = query(sql, (x, x, x))
+
+    if include_songs:
+        sql += """
+            union 
+            select album, artist, tracktitle, id, length
+            from library
+            where tracktitle like ?"""
+
+    sql += "order by tracktitle, artist;"
+
+    if include_songs:
+        result = query(sql, (x, x, x, x))
+    else:
+        result = query(sql, (x, x, x))
+
     return json.dumps(result)
 
 

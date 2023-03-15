@@ -174,12 +174,12 @@ async function processCommand() {
   showingResults = true;
   const command = document.getElementById("search").value;
   if (command.length > 0 && command[0] == ":") await doCommand(command);
-  else await getAlbums();
+  else await doSearch();
 
   await updateStatus(false);
 }
 
-async function getAlbums() {
+async function doSearch() {
   const search = document.getElementById("search").value;
   const albums = await doAjax("GET", `search?search=${search}`);
 
@@ -187,14 +187,21 @@ async function getAlbums() {
   for (const album of albums) {
     const listItem = document.createElement("li");
     const divText = document.createElement("div");
-    divText.innerHTML = `<h4>${album.artist}</h4><p><a href="#" onclick="getAlbum('${encodeURIComponent(
-      album.album
-    ).replace(/'/g, "%27")}')"> ${album.album}</a></p>`;
-
+    if (album.tracktitle) {
+      divText.innerHTML = `<h4>${album.tracktitle}</h4><p>${album.artist} - ${album.album}</a></p>`;
+    } else {
+      divText.innerHTML = `<h4>${album.artist}</h4><p><a href="#" onclick="getAlbum('${encodeURIComponent(
+        album.album
+      ).replace(/'/g, "%27")}')"> ${album.album}</a></p>`;
+    }
     const divButtons = document.createElement("div");
-    divButtons.appendChild(addButton("Play", () => playAlbum(album.album, album.artist)));
-    divButtons.appendChild(addButton("Add", () => queueAlbum(album.album, album.artist)));
-
+    if (album.tracktitle) {
+      divButtons.appendChild(addButton("Play", () => playOneSong(album.id)));
+      divButtons.appendChild(addButton("Add", () => queueSong(album.id)));
+    } else {
+      divButtons.appendChild(addButton("Play", () => playAlbum(album.album, album.artist)));
+      divButtons.appendChild(addButton("Add", () => queueAlbum(album.album, album.artist)));
+    }
     listItem.appendChild(divText);
     listItem.appendChild(divButtons);
     document.getElementById("content").appendChild(listItem);
@@ -276,7 +283,7 @@ function showStartScreen() {
   doc.innerHTML = `
         <li>
           <div style="max-width: 100%;">
-            <h2>MuiscBox</h3>
+            <h2>MusicBox</h3>
             <h3>Commands</h4>
             <p><strong>:clear</strong>  - clear the current queue</p>
             <p><strong>:mix [name of mixtape]</strong> - save contents of current queue to a 'mixtape' (aka playlist)</p>
