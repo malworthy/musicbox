@@ -198,6 +198,22 @@ def playsong(id):
     return play()
 
 
+@route('/autoplay/<album>')
+def add(album):
+    is_playing = mixer.music.get_busy()
+    if not is_playing:
+        con.execute("delete from queue")
+
+    con.execute(
+        "insert into queue(libraryid) select id from library where album = ? and id not in (select libraryid from queue) order by cast(tracknumber as INT), filename", (album,))
+    con.commit()
+
+    if not is_playing:
+        play()
+
+    return static_file("ui.html", "./ui/")
+
+
 @post('/playalbum')
 def playalbum():
     if mixer.music.get_busy():

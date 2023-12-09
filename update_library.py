@@ -6,6 +6,7 @@ import sqlite3
 import json
 import sys
 import os
+import argparse
 
 
 def get_files(ext):
@@ -99,6 +100,15 @@ def schema_upgrade(sql):
 ## main entry point ##
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--all', action="store_true",
+                    help="update songs and artwork")
+parser.add_argument('--art', action="store_true", help="update artwork only")
+parser.add_argument('--songs', action="store_true", help="update songs only")
+args = parser.parse_args()
+print(args.all)
+
+
 con = sqlite3.connect("musiclibrary.db")
 cur = con.cursor()
 schema_upgrade("create table library(id INTEGER PRIMARY KEY, filename text, tracktitle text, artist text, album text, albumartist text, tracknumber int, length int)")
@@ -113,11 +123,14 @@ f = open("config.json")
 config = json.load(f)
 f.close()
 
-# for ext in config["extensions"]:
-#    print(f" ----- Importing {ext} files ----- ")
-#    extract_tags(ext)
+if args.all or args.songs:
+    for ext in config["extensions"]:
+        print(f" ----- Importing {ext} files ----- ")
+        extract_tags(ext)
 
-# remove_orphans()
-update_cover_art()
+    remove_orphans()
+
+if args.all or args.art:
+    update_cover_art()
 
 print("finished")
