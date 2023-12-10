@@ -208,10 +208,14 @@ def add(album):
         "insert into queue(libraryid) select id from library where album = ? and id not in (select libraryid from queue) order by cast(tracknumber as INT), filename", (album,))
     con.commit()
 
+    message = f"The album {album} has been added to the queue"
     if not is_playing:
         play()
+        message = f"Playing album {album}"
 
-    return static_file("ui.html", "./ui/")
+    return f'<html><body><div style="text-align: center"><h2>{message}</h2><a href="/ui">Click here for MusicBox</a></div></body></html>'
+
+    # return static_file("ui.html", "./ui/")
 
 
 @post('/playalbum')

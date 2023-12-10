@@ -46,7 +46,7 @@ Create a config.json file:
 Update database with library:
 
 ```
-python update_library.py
+python update_library.py --all
 ```
 
 Run the server:

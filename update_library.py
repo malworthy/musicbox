@@ -106,8 +106,6 @@ parser.add_argument('--all', action="store_true",
 parser.add_argument('--art', action="store_true", help="update artwork only")
 parser.add_argument('--songs', action="store_true", help="update songs only")
 args = parser.parse_args()
-print(args.all)
-
 
 con = sqlite3.connect("musiclibrary.db")
 cur = con.cursor()
