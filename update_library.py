@@ -12,7 +12,9 @@ import argparse
 def get_files(ext):
     print("Retreiving files")
 
-    return glob.glob(f"{config['library']}**/*.{ext}", recursive=True)
+    result = glob.glob(f"{config['library']}**/*.{ext}", recursive=True)
+    print(result)
+    return result
 
 
 def extract_tags(ext):
@@ -126,7 +128,7 @@ if args.all or args.songs:
         print(f" ----- Importing {ext} files ----- ")
         extract_tags(ext)
 
-    remove_orphans()
+    # remove_orphans()
 
 if args.all or args.art:
     update_cover_art()

@@ -106,6 +106,13 @@ def queue():
     return json.dumps(result)
 
 
+@route("/queuestatus")
+def queue():
+    result = query(
+        "select count(*) as queueCount, sum(l.length) as queueLength from queue q inner join library l on q.libraryid = l.id", ())
+    return json.dumps(result[0])
+
+
 @route("/history")
 def history():
     sql = """

@@ -5,6 +5,11 @@ ready(start);
 function start() {
   updateStatus();
   setInterval(() => updateStatus(), 1000 * 10);
+  const input = document.getElementById("search");
+
+  input.addEventListener("keydown", (e) => {
+    if (e.code == "Enter") processCommand();
+  });
 }
 
 function ready(fn) {
@@ -61,7 +66,7 @@ async function updateStatus(updateContent = true) {
     playBtn.onclick = () => play();
     if (updateContent && !showingResults) showStartScreen();
   }
-  updateQueueStatus(songDetails.queueCount);
+  await updateQueueStatus(songDetails.queueCount);
 }
 
 async function stopPlay() {
@@ -115,13 +120,14 @@ async function skip() {
   updateStatus();
 }
 
-function updateQueueStatus(count) {
-  document.getElementById("queue").innerHTML = `Queue (${count})`;
+async function updateQueueStatus(count) {
+  const status = await doAjax("GET", "queuestatus");
+  document.getElementById("queue").innerHTML = `Queue (${status.queueCount}/${fmtMSS(status.queueLength)})`;
 }
 
 async function queueSong(id) {
   const result = await doAjax("POST", `add/${id}`);
-  updateQueueStatus(result.queueCount);
+  await updateQueueStatus(result.queueCount);
 }
 
 async function getAlbum(name) {
@@ -209,12 +215,14 @@ async function doSearch() {
 }
 
 function fmtMSS(s) {
-  return (s - (s %= 60)) / 60 + (9 < s ? ":" : ":0") + s;
+  const stringDate = new Date(s * 1000).toISOString();
+  return s < 3600 ? stringDate.substring(14, 19) : stringDate.substring(11, 19);
+  //return (s - (s %= 60)) / 60 + (9 < s ? ":" : ":0") + s;
 }
 
 async function removeFromQueue(id, row) {
   const result = await doAjax("DELETE", `${id}`);
-  updateQueueStatus(result.queueCount);
+  await updateQueueStatus(result.queueCount);
   row.parentNode.removeChild(row);
 }
 
@@ -242,7 +250,7 @@ async function getQueue() {
     listItem.appendChild(divButtons);
     document.getElementById("content").appendChild(listItem);
   }
-  updateQueueStatus(i - 1);
+  await updateQueueStatus(i - 1);
 }
 
 async function getHistory() {
