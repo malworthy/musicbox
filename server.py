@@ -196,8 +196,9 @@ def queuealbum():
     return """{"status" : "queued"}"""
 
 
-@post('/play/<id>')
+@post('/playsong/<id>')
 def playsong(id):
+    print("*** in playsong ***")
     if mixer.music.get_busy():
         return """{"status" : "already playing"}"""
     con.execute("delete from queue")
@@ -206,7 +207,7 @@ def playsong(id):
 
 
 @route('/autoplay/<album>')
-def add(album):
+def autoplay(album):
     is_playing = mixer.music.get_busy()
     if not is_playing:
         con.execute("delete from queue")

@@ -227,7 +227,7 @@ async function removeFromQueue(id, row) {
 }
 
 async function playOneSong(id) {
-  await doAjax("POST", `play/${id}`);
+  await doAjax("POST", `playsong/${id}`);
   updateStatus();
 }
 
