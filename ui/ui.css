@@ -145,3 +145,26 @@ input {
   box-sizing: border-box;
   padding: 5px;
 }
+
+.rainbow {
+  margin-top: 0px;
+  margin-bottom: 50px;
+  text-align: center;
+  /* font-family: sans-serif; */
+  /* font-size: 3rem; */
+  /* letter-spacing: 0.15rem; */
+  /* text-transform: uppercase; */
+  color: #fff;
+  text-shadow: -2px 2px #ef3550, -4px 4px #f48fb1, -6px 6px #7e57c2, -8px 8px #2196f3, -10px 10px #26c6da,
+    -12px 12px #43a047, -14px 14px #eeff41, -16px 16px #f9a825, -18px 18px #ff5722;
+}
+
+.rainbow2 {
+  margin-top: 0px;
+  margin-bottom: 10px;
+  /* font-family: sans-serif; */
+  letter-spacing: 0.25rem;
+  background: linear-gradient(to right, orange 0%, yellow 5%, green 10%, cyan 15%, #2196f3 20%, violet 25%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

@@ -172,6 +172,8 @@ async function doCommand(command) {
     if (num > 0) await doAjax("POST", `rand/${num}`);
   } else if (command.startsWith(":hist")) {
     await getHistory();
+  } else if (command.startsWith(":wrapped")) {
+    await showWrapped();
   }
   document.getElementById("search").value = "";
 }
@@ -291,14 +293,53 @@ function showStartScreen() {
   doc.innerHTML = `
         <li>
           <div style="max-width: 100%;">
-            <h2>MusicBox</h3>
-            <h3>Commands</h4>
+            <h2>MusicBox</h2>
+            <h3>Commands</h3>
             <p><strong>:clear</strong>  - clear the current queue</p>
             <p><strong>:mix [name of mixtape]</strong> - save contents of current queue to a 'mixtape' (aka playlist)</p>
             <p><strong>:delmix [name of mixtape]</strong> - delete a mixtape</p>
             <p><strong>:rand [x]</strong> - add 'x' number of random songs to the queue</p>
             <p><strong>:hist</strong> - show history of songs played</p>
+            <p><strong>:wrapped</strong> - MusicBox Wrapped!</p>
           </div>
         </li>
+  `;
+}
+
+async function showWrapped() {
+  const pastYear = new Date().getFullYear() - 1;
+  const doc = document.getElementById("content");
+  const artists = await doAjax("GET", `wrapped/artist/${pastYear}`);
+  let artists_html = "";
+  let i = 0;
+  for (const a of artists) {
+    artists_html += `<li>${++i} ${a.artist}</li>`;
+  }
+  const albums = await doAjax("GET", `wrapped/album/${pastYear}`);
+  let albums_html = "";
+  i = 0;
+  for (const a of albums) {
+    albums_html += `<li>${++i} ${a.album}</li>`;
+  }
+  const songs = await doAjax("GET", `wrapped/song/${pastYear}`);
+  let songs_html = "";
+  i = 0;
+  for (const a of songs) {
+    songs_html += `<li>${++i} ${a.song}</li>`;
+  }
+  const listenTime = await doAjax("GET", `wrapped/time/${pastYear}`);
+  doc.innerHTML = `
+        
+          <div style="max-width: 100%;">
+            <h1 class="rainbow">MusicBox Wrapped ${pastYear}</h1>
+            <h3 class="rainbow2">Top Artists</h3>
+            ${artists_html}
+            <h3 class="rainbow2">Top Songs</h3>
+            ${songs_html}
+            <h3 class="rainbow2">Top Albums</h3>
+            ${albums_html}
+            <h2 class="rainbow2">Total listening time: ${listenTime.seconds / 60} minutes</h2>
+          </div>
+        
   `;
 }

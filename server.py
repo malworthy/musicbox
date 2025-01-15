@@ -106,6 +106,63 @@ def queue():
     return json.dumps(result)
 
 
+@route("/wrapped/song/<year>")
+def wrapped(year):
+    sql = f"""
+        select l.tracktitle || ' - ' || l.artist as song, count(*) as plays
+        from history h
+        inner join library l on h.libraryid = l.id
+        where strftime('%Y', h.dateplayed) = ?
+        group by l.tracktitle,l.artist
+        order by plays
+        desc limit 5;
+    """
+    result = query(sql, (year,))
+    return json.dumps(result)
+
+
+@route("/wrapped/artist/<year>")
+def wrapped(year):
+    sql = f"""
+        select l.artist, count(*) as plays
+        from history h
+        inner join library l on h.libraryid = l.id
+        where strftime('%Y', h.dateplayed) = ?
+        group by l.artist
+        order by plays
+        desc limit 5;
+    """
+    result = query(sql, (year,))
+    return json.dumps(result)
+
+
+@route("/wrapped/album/<year>")
+def wrapped(year):
+    sql = f"""
+        select l.album || ' - ' || l.artist as album, count(*) as plays
+        from history h
+        inner join library l on h.libraryid = l.id
+        where strftime('%Y', h.dateplayed) = ?
+        group by l.album, l.artist
+        order by plays
+        desc limit 5;
+    """
+    result = query(sql, (year,))
+    return json.dumps(result)
+
+
+@route("/wrapped/time/<year>")
+def wrapped(year):
+    sql = f"""
+        select sum(l.length) as seconds
+        from history h
+        inner join library l on h.libraryid = l.id
+        where strftime('%Y', h.dateplayed) = ?
+    """
+    result = query(sql, (year,))
+    return json.dumps(result[0])
+
+
 @route("/queuestatus")
 def queue():
     result = query(
