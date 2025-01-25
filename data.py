@@ -43,6 +43,13 @@ def is_paused(db_conn):
     return result[0] > 0
 
 
+def get_radio_url(db_conn, id):
+    curs = db_conn.execute(
+        "select url from radio where id = ?", (id,))
+    result = curs.fetchone()
+    return result[0]
+
+
 def reset_queue(db_conn):
     db_conn.execute("update queue set playing = null, canplay = 1")
     db_conn.commit()

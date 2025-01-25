@@ -60,6 +60,13 @@ async function updateStatus(updateContent = true) {
       playBtn.onclick = () => stopPlay();
       if (updateContent && !showingResults) showCoverArt(songDetails.id);
     }
+  } else if (songDetails.playing === 2) {
+    const statusText = `<p>${songDetails.desc}</p>`;
+    if (statusDiv.innerHTML != statusText) {
+      statusDiv.innerHTML = statusText;
+      playBtn.innerHTML = "Stop";
+      playBtn.onclick = () => stopRadio();
+    }
   } else {
     statusDiv.innerHTML = "<p>Not Playing</p>";
     playBtn.innerHTML = "Play";
@@ -72,6 +79,16 @@ async function updateStatus(updateContent = true) {
 async function stopPlay() {
   clearPaused();
   await doAjax("POST", "stop");
+  const statusDiv = document.getElementById("status");
+  const playBtn = document.getElementById("play");
+  statusDiv.innerHTML = "<p>Not Playing</p>";
+  playBtn.innerHTML = "Play";
+  playBtn.onclick = () => play();
+}
+
+async function stopRadio() {
+  clearPaused();
+  await doAjax("GET", "radio/stop");
   const statusDiv = document.getElementById("status");
   const playBtn = document.getElementById("play");
   statusDiv.innerHTML = "<p>Not Playing</p>";
@@ -152,6 +169,31 @@ async function getAlbum(name) {
   }
 }
 
+async function playRadio(id) {
+  await doAjax("GET", `radio/play/${id}`);
+  await updateStatus();
+}
+
+async function radioStations() {
+  console.log("in radio stations");
+  var stations = await doAjax("GET", `radio/list`);
+  if (stations === null) return;
+  let i = 1;
+  document.getElementById("content").innerHTML = "";
+  for (const s of stations) {
+    const listItem = document.createElement("li");
+    const divText = document.createElement("div");
+    divText.innerHTML = `<h4>${i++}. ${s.name}</h4>`;
+
+    const divButtons = document.createElement("div");
+    divButtons.appendChild(addButton("Play", () => playRadio(s.id)));
+
+    listItem.appendChild(divText);
+    listItem.appendChild(divButtons);
+    document.getElementById("content").appendChild(listItem);
+  }
+}
+
 function addButton(text, clickEvent) {
   let button = document.createElement("button");
   button.textContent = text;
@@ -174,6 +216,8 @@ async function doCommand(command) {
     await getHistory();
   } else if (command.startsWith(":wrapped")) {
     await showWrapped();
+  } else if (command.startsWith(":radio")) {
+    await radioStations();
   }
   document.getElementById("search").value = "";
 }
@@ -300,6 +344,7 @@ function showStartScreen() {
             <p><strong>:delmix [name of mixtape]</strong> - delete a mixtape</p>
             <p><strong>:rand [x]</strong> - add 'x' number of random songs to the queue</p>
             <p><strong>:hist</strong> - show history of songs played</p>
+            <p><strong>:radio</strong> - show radio stations</p>
             <p><strong>:wrapped</strong> - MusicBox Wrapped!</p>
           </div>
         </li>

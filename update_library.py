@@ -93,9 +93,20 @@ def add_to_database(data):
     con.commit()
 
 
+def import_radio_stations(stations):
+    cur.execute("delete from radio")
+    for s in stations:
+        name = s["name"]
+        print(f"Adding radio station {name}")
+        sql = "insert into radio(name, url) values(?,?)"
+        cur.execute(sql, (name, s["url"]))
+    con.commit()
+
+
 def schema_upgrade(sql):
     try:
         cur.execute(sql)
+        print(f"Database upgraded: {sql}")
     except:
         pass
 
@@ -107,10 +118,13 @@ parser.add_argument('--all', action="store_true",
                     help="update songs and artwork")
 parser.add_argument('--art', action="store_true", help="update artwork only")
 parser.add_argument('--songs', action="store_true", help="update songs only")
+parser.add_argument('--stations', action="store_true",
+                    help="update radio stations")
 args = parser.parse_args()
 
 con = sqlite3.connect("musiclibrary.db")
 cur = con.cursor()
+
 schema_upgrade("create table library(id INTEGER PRIMARY KEY, filename text, tracktitle text, artist text, album text, albumartist text, tracknumber int, length int)")
 schema_upgrade(
     "create table queue(id INTEGER PRIMARY KEY, libraryid int, sortorder int, playing text, canplay int)")
@@ -118,6 +132,8 @@ schema_upgrade("alter table library add year text")
 schema_upgrade(
     "create table history(id INTEGER PRIMARY KEY, libraryid int, dateplayed text)")
 schema_upgrade("alter table library add coverart text")
+schema_upgrade(
+    "create table radio(id INTEGER PRIMARY KEY, name text, url text)")
 
 f = open("config.json")
 config = json.load(f)
@@ -132,5 +148,8 @@ if args.all or args.songs:
 
 if args.all or args.art:
     update_cover_art()
+
+if args.stations:
+    import_radio_stations(config["stations"])
 
 print("finished")

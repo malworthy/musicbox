@@ -6,14 +6,20 @@ from pygame import mixer
 import pygame
 from player import playasync
 from data import create_connection, get_next_song, reset_queue, setplaying
+import data
 import os
 import time
+import subprocess
 
 
 def query(sql, params):
     res = con.execute(sql, params)
     rows = res.fetchall()
     return [dict(row) for row in rows]
+
+
+def status_json(msg):
+    return """{"status": "_*_"}""".replace("_*_", msg)
 
 
 @route('/ui')
@@ -24,6 +30,36 @@ def ui():
 @route('/ui/<file>')
 def ui2(file):
     return static_file(file, "./ui/")
+
+
+@route('/radio/play/<id>')
+def radio(id):
+    global radio_process
+    if radio_process != None:
+        return "radio already playing"
+
+    app = config["radio_player"]
+    url = data.get_radio_url(con, id)
+    radio_process = subprocess.Popen([app, url])
+    return status_json(f"radio play started {radio_process.pid}")
+
+
+@route('/radio/stop')
+def stop_radio():
+    global radio_process
+    if radio_process == None:
+        return status_json("radio is not playing so can't stop it")
+    pid = radio_process.pid
+    radio_process.kill()
+    radio_process = None
+    return f"radio has stopped playing.  pid={pid}"
+
+
+@route('/radio/list')
+def list_radio():
+    sql = "select id, name from radio"
+    result = query(sql, ())
+    return json.dumps(result)
 
 
 @route('/coverart/<id>')
@@ -183,6 +219,11 @@ def history():
 
 @route("/status")
 def status():
+    if radio_process != None:
+        return """
+           { "playing": 2, "desc" : "Playing internet radio" }
+        """
+
     sql = """
         select l.*, 1 as playing, (select count(*) from queue) as queueCount 
         from queue q inner join library l on q.libraryid = l.id 
@@ -330,6 +371,8 @@ def delete_mixtape(name):
 
 ##### ENTRY POINT #####
 con = create_connection()
+
+radio_process = None
 
 reset_queue(con)
 
